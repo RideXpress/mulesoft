@@ -13,6 +13,9 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '17'
+      - uses: actions/setup-maven@v4
+        with:
+          maven-version: '3.9.6'
       - run: npm install -g anypoint-cli-v4
       - run: anypoint-cli-v4 --version
       - run: mvn -version
