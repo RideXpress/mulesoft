@@ -2,7 +2,7 @@ name: setup
 run-name: Setup Action triggered by ${{ github.actor }}
 on: [push]
 jobs:
-  check-bats-version:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
