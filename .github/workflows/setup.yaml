@@ -18,6 +18,7 @@ jobs:
           maven-version: '3.9.6'
       - run: npm install -g anypoint-cli-v4
       - run: anypoint-cli-v4 --version
-      - run: mvn -version
       - run: java -version
+      - run: mvn -version
+      - run: mvn help:effective-settings
       - run: echo "Setup completed"
