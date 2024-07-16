@@ -20,10 +20,10 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
       - run: java -version
-      - name: Install Maven 3.9.6
+      - name: Install Maven 3.9.8
         uses: stCarolas/setup-maven@v5
         with:
-          maven-version: '3.9.6'
+          maven-version: '3.9.8'
       - run: mvn -version
       - run: mvn help:effective-settings
       - run: echo "Setup completed"
