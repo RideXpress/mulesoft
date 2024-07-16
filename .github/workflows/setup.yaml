@@ -24,6 +24,6 @@ jobs:
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: '3.9.8'
-      - run: mvn -version
-      - run: mvn help:effective-settings
+      - run: mvn -b -version
+      - run: mvn -b help:effective-settings
       - run: echo "Setup completed"
