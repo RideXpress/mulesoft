@@ -13,8 +13,8 @@ jobs:
           node-version: '21'
       - name: Printing setup variables
         env:
-          ANYPOINT_ORG: ${{ env.ANYPOINT_ORG }}
-        run: echo $ANYPOINT_ORG
+          ANYPOINT_ORG: ${{ secrets.ANYPOINT_ORG }}
+        run: echo "$ANYPOINT_ORG"
       - name: Install Anypoint CLI v4
         run: npm install -g anypoint-cli-v4
       - run: anypoint-cli-v4 --version
