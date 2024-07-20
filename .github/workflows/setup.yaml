@@ -13,6 +13,7 @@ jobs:
           node-version: '21'
       - name: Install Anypoint CLI v4
         run: npm install -g anypoint-cli-v4
+      - run: echo $ANYPOINT_ORG
       - run: anypoint-cli-v4 --version
       - name: Install Java 17
         uses: actions/setup-java@v4
