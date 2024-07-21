@@ -17,7 +17,7 @@ jobs:
         run: echo "$ANYPOINT_ORG"
       - name: Install Anypoint CLI v4
         run: npm install -g anypoint-cli-v4
-      - run: anypoint-cli-v4 --version
+      - run: anypoint-cli-v4 designcenter:project:list
       - name: Install Java 17
         uses: actions/setup-java@v4
         with:
@@ -28,6 +28,6 @@ jobs:
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: '3.9.8'
-      - run: mvn -B -version
-      - run: mvn -B help:effective-settings
+      - run: mvn -B --no-transfer-progress -version
+      - run: mvn -B --no-transfer-progress help:effective-settings
       - run: echo "Setup completed"
