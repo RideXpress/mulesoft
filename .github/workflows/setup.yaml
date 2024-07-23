@@ -19,7 +19,7 @@ jobs:
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-        run: anypoint-cli-v4 account:business-group:describe
+        run: anypoint-cli-v4 designcenter:project:list
       - name: Install Java 17
         uses: actions/setup-java@v4
         with:
