@@ -25,7 +25,7 @@ jobs:
       - name: Install Anypoint CLI v4
         run: npm install -g anypoint-cli-v4      
       - run: echo "Setup completed"
-      - run: mkdir ${{inputs.api-impl-folder}}/src/main/resources/api
+      - run: mkdir -p ./${{inputs.api-impl-folder}}/src/main/resources/api
       - name: Download Design Center Projects
         env:
           ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
