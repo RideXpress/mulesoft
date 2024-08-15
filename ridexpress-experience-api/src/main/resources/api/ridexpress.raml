@@ -1,0 +1,435 @@
+#%RAML 1.0
+title: RideXpress
+
+uses:
+  users: libraries/users.raml
+  commons: libraries/commons.raml
+  rides: libraries/rides.raml
+
+/user:
+  post:
+    description: User Sign Up
+    headers:
+      X-Transaction-Id:
+    body:
+      application/json:
+        type: users.user        
+        example:
+          {
+            "userName": "focadiz",
+            "email": "felipe@ridexpress.io",
+            "mobile": "4153435678",
+            "firstName": "Felipe",
+            "middleName": "Test",
+            "lastName": "Ocadiz",
+            "userType": "Driver",
+            "address": "",
+            "zipCode": "",
+            "driverLicense": "",
+            "vehicles": [
+              {
+                "make": "Ford",
+                "model": "Focus",
+                "year": 2012,
+                "licensePlate": "8PSQ3456",
+                "insurancePolicy": "ABC123456",
+                "isActive": "true"
+              }
+            ]
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example:
+              {
+                "message": "focadiz user created successfully"
+              }
+      400:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example:
+              {
+                "message": "Invalid request"
+              }
+      409:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example:
+              {
+                "message": "focadiz already exists, pick a new username"
+              }
+  get:
+    description: Gets user details
+    responses:
+      200:
+        body:
+          application/json:
+            type: users.user
+            example:
+              {
+                "id": "e58ed763-928c-4155-bee9-fdbaaadc15f3",
+                "userName": "focadiz",
+                "email": "felipe@ridexpress.io",
+                "mobile": "4153435678",
+                "firstName": "Felipe",
+                "middleName": "Test",
+                "lastName": "Ocadiz",
+                "profilePicture": "",
+                "userType": "Driver",
+                "address": "",
+                "zipCode": "",
+                "driverLicense": "",
+                "lastModifiedDate": "",
+                "createdDate": ""
+              }
+  /vehicles:
+    get:
+      description: Returns the driver's vehicles
+      queryParameters:
+        active:
+      responses:
+        200:
+          body:
+            application/json:
+              type: commons.car[]
+              example:
+                  [
+                    {
+                      "id": "e58ed763-928c-4155-bee9-fdbaaadc15f3",
+                      "make": "Ford",
+                      "model": "Focus",
+                      "year": 2012,
+                      "licensePlate": "8PSQ3456",
+                      "insurancePolicy": "ABC123456",
+                      "lastModifiedDate": "2024-08-01T12:00:00Z",
+                      "createdDate": "2024-08-01T12:00:00Z"
+                    }
+                  ]
+    /{id}:
+      put:
+        description: For future release, this will update the active vehicle when the driver opens the app to start working
+
+  put:
+    description: Updates user record 
+    body:
+      application/json:
+        type: users.user
+        example:
+          {
+            "email": "test@test.com",
+            "middleName": null
+          }
+  delete:
+    description: Deactivates user record (soft delete)
+    responses:
+      200:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example:
+              {
+                "message": "User record deleted successfully"
+              }
+  /geolocation:
+    post:
+      description: Post user "real time" location
+      body:
+        application/json:
+          type: commons.location
+          example:
+            {
+              "long": 14314123,
+              "lat": 432432423
+            }
+        
+  /attachments:
+    description: Files will be stored in the following path {userId}/fileName
+    post:
+      body:
+        multipart/form-data:
+          properties:
+            documentType:
+              enum: ["Driver License", "Proof of insurance", "Vehicle registration", "Profile picture"]
+              required: true
+            fileName:
+              type: string
+              required: true
+            file:
+              required: true
+              type: file
+              fileTypes: ["application/pdf", "application/msword", "image/jpg", "image/png"]
+
+
+/rides:
+  get:
+    description: Get a list of previous rides, if parameters are not provided, the API will return the rides from the last 30 days
+    queryParameters:
+      from:
+        type: datetime
+        required: false
+      to:
+        type: datetime
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: rides.ride[]
+            example:
+              [
+                {
+                  "id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20",
+                  "rate": 27.86,
+                  # Todo: We can put the expected arrival time to destination in the same level as the rate.
+                  "pickupLocation": "",
+                  "destination": "",
+                  "destinationName": "",
+                  "lastModifiedDate": "",
+                  "createdDate": "",
+                  "updatedDate": ""
+                }
+              ]
+  post:
+    description: Request a Ride Quote
+    body:
+      application/json:
+        type: rides.ride
+        example:
+          {
+            "pickupLocation": "123456,523543425",
+            "destination": "1321,235352",
+            "destinationName": "Cumaica Artesanos del Cafe"
+          }
+    responses:
+      201:
+        body:
+          application/json:
+            type: rides.ride
+            example:
+              {
+                "id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20",
+                "rate": 27.89,
+                "status": "NEW"
+              }
+  /{id}:
+    get:
+      description: Get Ride Details
+      responses:
+        200:
+          body:
+            application/json:
+              type: rides.ride
+              example:
+                {
+                  "id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20",                 
+                  "pickupLocation": "123456,523543425",
+                  "destination": "1321,235352",
+                  "destinationName": "Civic Center",
+                  "rate": 123.45,
+                  "status": "NEW",
+                  "lastModifiedDate": "",
+                  "createdDate": ""
+                }
+
+    /passenger:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.rideParticipant
+                example:
+                  {
+                    "firstName": "Nicolas",
+                    "profilePicture": "assets/f8c3de3d-1fea-4d7c-a8b0-29f63c4c3454.png",
+                    "rating": 4.2
+                  }
+      /location:
+        get:
+          description: Returns the driver's realtime location
+          responses:
+            200:
+              body:
+                application/json:
+                  type: commons.location
+                  example:
+                    {
+                      "long": 12312312,
+                      "lat": 5425325
+                    }
+    /driver:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.rideParticipant
+                example:
+                  {
+                    "firstName": "Nicolas",
+                    "profilePicture": "assets/f8c3de3d-1fea-4d7c-a8b0-29f63c4c3454.png",
+                    "rating": 4.2
+                  }
+      /location:
+        get:
+          description: Returns the driver's realtime location
+          responses:
+            200:
+              body:
+                application/json:
+                  type: commons.driverLocation
+                  example:
+                    {
+                      "long": 12312312,
+                      "lat":5425325,
+                       "arrivalTime": 5
+                    }                    
+    /payment:
+      get:
+        description: Returns payment status
+        body:
+          application/json:
+            type:
+              properties:
+                status: commons.paymentStatus
+            example:
+              {
+                "status": "HOLD"
+              }
+
+    /route:
+      get:
+        description: ToDo Review route endpoints in Google Maps API
+
+    /feedback:
+      post:
+        body:
+          application/json:
+            type:
+              properties:
+                rating: commons.ratingType
+            example:
+              {
+                "rating": "5"
+              }
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+                example:
+                  {
+                    "message": "Feedback processed successfully"
+                  }
+
+    /status:
+      get:
+        description: Get realtime ride status
+        responses:
+          200:
+            body:
+              application/json:
+                type: 
+                  properties:
+                    status: rides.rideStatus
+                    arrivalTime: number
+                example:
+                  {
+                    "status": "ACCEPTED_BY_DRIVER",
+                    "arrivalTime": 5
+                  }
+      put:
+        body:
+          application/json:
+            type:
+              properties:
+                status: rides.rideStatus
+            example:
+              {
+                "status": "CANCELED_FOR_REFUND"
+              }
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.apiResponse
+                example:
+                  {
+                    "message": "Status updated successfully"
+                  }
+
+    /summary:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.rideSummary
+                example:
+                  {
+                    "id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20",
+                    "rate": "27.86",
+                    "pickupLocation": "",
+                    "destination": "",
+                    "destinationName": "",
+                    "status": "",
+                    "route": {
+                      "ToDo": "Review route structure"                      
+                    },
+                    "passenger": {
+                      "firstName": "",
+                      "profilePicture": "",
+                      "rating": 4.3
+                    },
+                    "driver": {
+                      "firstName": "",
+                      "profilePicture": "",
+                      "rating": 4.7
+                    },
+                    "lastModifiedDate": "",
+                    "createdDate": ""
+                  }
+
+/geolocations:
+  get:
+    description:
+    queryParameters:
+      search:
+    responses:
+      200:
+        body:
+          application/json:
+            type: rides.location[]
+            example:
+              [
+                {
+                  "long": 123456,
+                  "lat": 523543425,
+                  "name": "1355 Market St",
+                  "zipCode": "94001"
+                },
+                {
+                  "long": 123456,
+                  "lat": 523543425,
+                  "name": "1366 Market St",
+                  "zipCode": "94001"
+                }
+              ] 
+  /{id}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: rides.location
+              example: 
+                {
+                  "long": 123456,
+                  "lat": 523543425,
+                  "name": "1355 Market St",
+                  "zipCode": "94001"
+                }
