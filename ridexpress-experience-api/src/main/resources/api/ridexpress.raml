@@ -1,0 +1,269 @@
+#%RAML 1.0
+title: RideXpress
+
+securitySchemes:
+  oauth: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/oauth-security-scheme/1.0.0/oauth-security-scheme.raml
+
+uses:
+  users: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/user-data-types/1.0.0/user-data-types.raml
+  commons: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types/1.0.0/commons.raml
+  rides:  exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/ride-data-types/1.0.0/rides.raml
+
+securedBy:
+  - oauth
+
+traits:
+  transactionId: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/transaction-id-trait/1.0.0/transaction-id.raml
+
+/user:
+  is:
+    - transactionId
+  post:
+    description: User Sign Up
+    body:
+      application/json:
+        type: users.user        
+        example: !include examples/user/user-post.json
+    responses:
+      201:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example: !include examples/user/user-response-201.json
+      400:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example: !include examples/user/user-response-400.json 
+      409:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example: !include examples/user/user-response-409.json 
+  get:
+    description: Gets user details
+    responses:
+      200:
+        body:
+          application/json:
+            type: users.user
+            example: !include examples/user/user-get.json
+              
+  /vehicles:
+    get:
+      description: Returns the driver's vehicles
+      queryParameters:
+        active:
+      responses:
+        200:
+          body:
+            application/json:
+              type: commons.car[]
+              example: !include examples/user/user-vehicles-get.json
+    /{id}:
+      put:
+        description: For future release, this will update the active vehicle when the driver opens the app to start working
+
+  put:
+    description: Updates user record 
+    body:
+      application/json:
+        type: users.user
+        example: !include examples/user/user-put.json
+
+  delete:
+    description: Deactivates user record (soft delete)
+    responses:
+      200:
+        body:
+          application/json:
+            type: commons.apiResponse
+            example: !include examples/user/user-del.json
+
+  /geolocation:
+    post:
+      description: Post user "real time" location
+      body:
+        application/json:
+          type: commons.location
+          example: !include examples/user/user-geolocation-post.json
+        
+  /attachments:
+    description: Files will be stored in the following path {userId}/fileName
+    post:
+      body:
+        multipart/form-data:
+          properties:
+            documentType:
+              enum: ["Driver License", "Proof of insurance", "Vehicle registration", "Profile picture"]
+              required: true
+            fileName:
+              type: string
+              required: true
+            file:
+              required: true
+              type: file
+              fileTypes: ["application/pdf", "application/msword", "image/jpg", "image/png"]
+
+/rides:
+  is:
+    - transactionId
+  get:
+    description: Get a list of previous rides, if parameters are not provided, the API will return the rides from the last 30 days
+    queryParameters:
+      from:
+        type: datetime
+        required: false
+      to:
+        type: datetime
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            type: rides.ride[]
+            example: !include examples/rides/rides-get.json
+  post:
+    description: Request a Ride Quote
+    body:
+      application/json:
+        type: rides.ride
+        example: !include examples/rides/rides-post.json
+         
+    responses:
+      201:
+        body:
+          application/json:
+            type: rides.ride
+            example: !include examples/rides/rides-post-response.json
+  /{id}:
+    get:
+      description: Get Ride Details
+      responses:
+        200:
+          body:
+            application/json:
+              type: rides.ride
+              example: !include examples/rides/rides-id-get.json
+
+    /passenger:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.rideParticipant
+                example: !include examples/rides/rides-passenger-get.json  
+      /location:
+        get:
+          description: Returns the driver's realtime location
+          responses:
+            200:
+              body:
+                application/json:
+                  type: commons.location
+                  example: !include examples/rides/rides-loc-passenger-get.json  
+    /driver:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.rideParticipant
+                example: !include examples/rides/rides-driver-get.json  
+                 
+      /location:
+        get:
+          description: Returns the driver's realtime location
+          responses:
+            200:
+              body:
+                application/json:
+                  type: commons.driverLocation
+                  example: !include examples/rides/rides-loc-driver-get.json                   
+    /payment:
+      get:
+        description: Returns payment status
+        body:
+          application/json:
+            type:
+              properties:
+                status: commons.paymentStatus
+            example: !include examples/rides/rides-payment-get.json    
+
+    /route:
+      get:
+        description: ToDo Review route endpoints in Google Maps API
+
+    /feedback:
+      post:
+        body:
+          application/json:
+            type:
+              properties:
+                rating: commons.ratingType
+            example: !include examples/rides/rides-feedback-post.json  
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+                example: !include examples/rides/rides-feedback-post-response.json
+
+    /status:
+      get:
+        description: Get realtime ride status
+        responses:
+          200:
+            body:
+              application/json:
+                type: 
+                  properties:
+                    status: rides.rideStatus
+                    arrivalTime: number
+                example: !include examples/rides/rides-status-get.json  
+      put:
+        body:
+          application/json:
+            type:
+              properties:
+                status: rides.rideStatus
+            example: !include examples/rides/rides-status-put.json  
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.apiResponse
+                example: !include examples/rides/rides-status-put-response.json
+
+    /summary:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.rideSummary
+                example: !include examples/rides/rides-summary-get.json  
+
+/geolocations:
+  is:
+    - transactionId
+  get:
+    description:
+    queryParameters:
+      search:
+    responses:
+      200:
+        body:
+          application/json:
+            type: rides.location[]
+            example: !include examples/geolocations/geolocations-get.json
+  /{id}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: rides.location
+              example: !include examples/geolocations/geolocations-id-get.json
+                
