@@ -33,7 +33,7 @@ jobs:
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
         run: anypoint-cli-v4 designcenter:project:download ${{inputs.api-name}} ${{inputs.api-impl-folder}}/src/main/resources/api
-      - uses: GrantBirki/git-diff-action@vX.X.X
+      - uses: GrantBirki/git-diff-action@v2.7.0
         id: git-diff-action
         with:
           json_diff_file_output: diff.json
