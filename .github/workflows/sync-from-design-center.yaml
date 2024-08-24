@@ -33,14 +33,11 @@ jobs:
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
         run: anypoint-cli-v4 designcenter:project:download ${{inputs.api-name}} ${{inputs.api-impl-folder}}/src/main/resources/api
-      - name: Check for differences
-        id: git_diff
-        run: |
-          git diff --exit-code 
+      - uses: technote-space/get-diff-action@v6
       - name: Create branch, commit and create a PR
         id: cpr
         uses: peter-evans/create-pull-request@v6
-        if: steps.git_diff.outputs.exit-code != 0
+        if: env.GIT_DIFF
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
