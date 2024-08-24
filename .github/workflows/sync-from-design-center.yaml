@@ -43,7 +43,7 @@ jobs:
         if: ${{ steps.git_diff.outputs.diff }} != 0
         with:
           commit-message: An update on the Design Center API Definition was detected for the ${{inputs.api-name}} project.
-          title: Changes on ${{inputs.api-name}} on Design Center
+          title: Changes on ${{inputs.api-name}} on Design Center - ${{ github.run_id }}
           body: |
             - API Definition Updated
             
