@@ -36,7 +36,7 @@ jobs:
       - name: Check for differences
         id: git_diff
         run: |
-          git diff --exit-code origin/main || echo "differences found"  
+          git diff --exit-code || echo "differences found"  
       - name: Create branch, commit and create a PR
         id: cpr
         uses: peter-evans/create-pull-request@v6
