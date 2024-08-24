@@ -36,11 +36,11 @@ jobs:
       - name: Check for differences
         id: git_diff
         run: |
-          /usr/bin/git diff --exit-code 
+          if git diff --quiet; then echo "diff=0" >> $GITHUB_OUTPUT; else echo "diff=1" >> $GITHUB_OUTPUT ; fi
       - name: Create branch, commit and create a PR
         id: cpr
         uses: peter-evans/create-pull-request@v6
-        if: steps.git_diff.outputs.exit-code != 0
+        if: ${{ steps.git_diff.outputs.diff }} != 0
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
