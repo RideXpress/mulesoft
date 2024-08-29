@@ -25,14 +25,16 @@ jobs:
       - name: Install Anypoint CLI v4
         run: npm install -g anypoint-cli-v4      
       - run: echo "Setup completed"
-      - run: mkdir -p ./${{inputs.api-impl-folder}}/src/main/resources/api
       - name: Upload/Replace RAMLs into Design Center
         env:
           ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-        run: anypoint-cli-v4 designcenter:project:upload ${{inputs.api-name}} ${{inputs.api-impl-folder}}/src/main/resources/api
+        run: |
+          find . -name "exchange.json" -maxdepth 6 | while read -r file; do
+          
+          anypoint-cli-v4 designcenter:project:upload ${{inputs.api-name}} ${{inputs.api-impl-folder}}/src/main/resources/api
       - name: Check outputs
         if: ${{ steps.cpr.outputs.pull-request-number }}
         run: |
