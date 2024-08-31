@@ -30,7 +30,9 @@ jobs:
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
         run: |
+          mkdir -p design-center
           anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq -c '.[]' | while read -r PROJECT
           do
-            echo $PROJECT | jq -r '.name'
+            echo "Downloading $PROJECT_NAME$(echo $PROJECT | jq -r '.name')"
+            anypoint-cli-v4 designcenter:project:download \"$PROJECT_NAME\" ./design-center
           done
