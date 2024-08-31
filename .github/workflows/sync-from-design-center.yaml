@@ -1,6 +1,9 @@
 name: GitHub Actions Mule
 run-name: Syncronization from Design Center Action run by ${{ github.actor }}
-on: push
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * MON'
 jobs:
   setup:
     runs-on: ubuntu-latest
