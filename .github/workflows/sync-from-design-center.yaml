@@ -32,4 +32,7 @@ jobs:
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-        run: anypoint-cli-v4 designcenter:project:list --output json | jq '.[] | .name'
+        run: |
+          for PROJECT_NAME in $(anypoint-cli-v4 designcenter:project:list --output json --limit 1000 | jq '.[] | .name'); do \
+            echo "Design Center Project Name:" $PROJECT_NAME
+          done
