@@ -32,4 +32,4 @@ jobs:
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-        run: anypoint-cli-v4 designcenter:project:list --output json
+        run: anypoint-cli-v4 designcenter:project:list --output json | jq '.[name]'
