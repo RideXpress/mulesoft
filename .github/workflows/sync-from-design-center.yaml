@@ -30,8 +30,9 @@ jobs:
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
         run: |
+          anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq '.[] | .name
           DESIGN_CENTER_PROJECTS=$(anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq '.[] | .name')
           echo $DESIGN_CENTER_PROJECTS | while read -r PROJECT_NAME
           do
-            echo $PROJECT_NAME
+            echo ********* $PROJECT_NAME **********
           done
