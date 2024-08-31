@@ -37,3 +37,4 @@ jobs:
             echo "Downloading $PROJECT_NAME"
             anypoint-cli-v4 designcenter:project:download "$PROJECT_NAME" ./design-center
           done
+          ls -l ./design-center
