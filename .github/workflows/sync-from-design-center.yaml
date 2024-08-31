@@ -33,6 +33,7 @@ jobs:
           mkdir -p design-center
           anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq -c '.[]' | while read -r PROJECT
           do
-            echo "Downloading $PROJECT_NAME$(echo $PROJECT | jq -r '.name')"
+            PROJECT_NAME=$(echo $PROJECT | jq -r '.name')
+            echo "Downloading $PROJECT_NAME"
             anypoint-cli-v4 designcenter:project:download \"$PROJECT_NAME\" ./design-center
           done
