@@ -35,5 +35,5 @@ jobs:
           do
             PROJECT_NAME=$(echo $PROJECT | jq -r '.name')
             echo "Downloading $PROJECT_NAME"
-            anypoint-cli-v4 designcenter:project:download \"$PROJECT_NAME\" ./design-center
+            anypoint-cli-v4 designcenter:project:download "$PROJECT_NAME" ./design-center
           done
