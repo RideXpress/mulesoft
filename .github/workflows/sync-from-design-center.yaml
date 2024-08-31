@@ -1,17 +1,6 @@
 name: GitHub Actions Mule
 run-name: Syncronization from Design Center Action run by ${{ github.actor }}
-on: 
-  workflow_dispatch:
-      inputs:          
-          api-name:
-            description: 'API name to update'
-            required: true
-            default: ''
-          api-impl-folder:
-            description: 'API Implementation folder name to update'
-            required: true
-            default: ''
-
+on: push
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -43,12 +32,4 @@ jobs:
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-        run: anypoint-cli-v4 designcenter:project:download ${{inputs.api-name}} ${{inputs.api-impl-folder}}/src/main/resources/api
-      - name: Create branch, commit and create a PR
-        id: cpr
-        uses: peter-evans/create-pull-request@v6
-      - name: Check outputs
-        if: ${{ steps.cpr.outputs.pull-request-number }}
-        run: |
-          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
-          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+        run: anypoint-cli-v4 designcenter:project:list
