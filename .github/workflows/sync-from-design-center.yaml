@@ -34,5 +34,5 @@ jobs:
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
         run: |
           for PROJECT_NAME in $(anypoint-cli-v4 designcenter:project:list --output json --limit 1000 | jq '.[] | .name'); do \
-            echo "Design Center Project Name:" $PROJECT_NAME
+            echo "Design Center Project Name:" $PROJECT_NAME \
           done
