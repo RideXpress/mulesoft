@@ -23,9 +23,6 @@ jobs:
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: '3.9.8'
-      - run: mvn -B --no-transfer-progress -version
-      - run: mvn -B --no-transfer-progress help:effective-settings
-      - run: echo "Setup completed"
       - name: Download Design Center Projects
         env:
           ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
@@ -34,8 +31,6 @@ jobs:
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
         run: |
           DESIGN_CENTER_PROJECTS=$(anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq '.[] | .name')
-          echo $DESIGN_CENTER_PROJECTS
-          echo ***********************
           echo $DESIGN_CENTER_PROJECTS | while read -r PROJECT_NAME
           do
             echo $PROJECT_NAME
