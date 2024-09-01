@@ -1,4 +1,4 @@
-name: Setup
+name: Setup GitHub Actions
 run-name: Setup Action run by ${{ github.actor }}
 on: workflow_call
 jobs:

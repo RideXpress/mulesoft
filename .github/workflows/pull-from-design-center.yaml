@@ -1,4 +1,4 @@
-name: GitHub Actions Mule
+name: Pull Design Center Projects
 run-name: Syncronization from Design Center Action run by ${{ github.actor }}
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Merge into master design center sync action
+name: Push Design Center Projects
 run-name: Syncronization to Design Center Action
 on: 
   workflow_dispatch:
