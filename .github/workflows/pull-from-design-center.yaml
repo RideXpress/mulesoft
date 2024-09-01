@@ -5,11 +5,11 @@ on:
   schedule:
     - cron: '0 0 * * MON'
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yaml
   pull-from-design-center:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup
+        uses: ./.github/workflows/setup.yaml
       - name: Download Design Center Projects
         env:
           ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
