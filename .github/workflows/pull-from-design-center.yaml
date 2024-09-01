@@ -6,16 +6,10 @@ on:
     - cron: '0 0 * * MON'
 jobs:
   setup:
+    uses: ./.github/workflows/setup.yaml
+  pull-from-design-center:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node JS
-        uses: actions/setup-node@v4
-        with:
-          node-version: '21'
-      - name: Install Anypoint CLI v4
-        run: npm install -g anypoint-cli-v4
       - name: Download Design Center Projects
         env:
           ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
