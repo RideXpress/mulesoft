@@ -1,6 +1,6 @@
-name: Setup GitHub Actions
+name: Setup
 run-name: Setup Action run by ${{ github.actor }}
-on: workflow_call
+on: workflow_dispatch
 jobs:
   setup:
     runs-on: ubuntu-latest

@@ -1,0 +1,39 @@
+name: Pull Design Center Projects
+run-name: Syncronization from Design Center Action run by ${{ github.actor }}
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * MON'
+jobs:
+  setup:
+    uses: ./.github/workflows/setup.yaml
+  pull-from-design-center:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Design Center Projects
+        env:
+          ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
+          ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+        run: |
+          # Creating temporary folders
+          mkdir -p design-center
+          mkdir -p tmp
+          
+          # Creating environment variables
+          TMP=tmp
+          DESIGN_CENTER=design-center
+          
+          # Navigating Design Center Projects
+          anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq -c '.[]' | while read -r PROJECT
+          do
+            PROJECT_NAME=$(echo $PROJECT | jq -r '.name')
+            echo "Downloading $PROJECT_NAME"
+            anypoint-cli-v4 designcenter:project:download "$PROJECT_NAME" $TMP
+            ASSET_ID=$(jq '.assetId' $TMP/exchange.json)
+            mkdir -p $DESIGN_CENTER/$ASSET_ID
+            mv $TMP/* $DESIGN_CENTER/$ASSET_ID
+          done
+          rm -rf $TMP
+          tree $DESIGN_CENTER
