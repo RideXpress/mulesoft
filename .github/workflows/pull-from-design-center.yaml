@@ -52,5 +52,8 @@ jobs:
             mkdir -p $DESIGN_CENTER/$ASSET_ID
             mv $TMP/* $DESIGN_CENTER/$ASSET_ID
             rm -rf $TMP
+            git checkout -b feature/$ASSET_ID
+            git add .
+            git commit -m "Pulling updates from Design Center"
             gh pr create --title "Pulling updates from Design Center" --body "This is an automated PR to sync GitHub and Design Center" --base main --head feature/$ASSET_ID
           done
