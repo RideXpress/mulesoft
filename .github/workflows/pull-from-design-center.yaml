@@ -1,5 +1,5 @@
 name: Pull Design Center Projects
-run-name: Syncronization from Design Center Action run by ${{ github.actor }}
+run-name: Pulling updates from Design Center run by ${{ github.actor }}
 on:
   workflow_dispatch:
   schedule:
@@ -50,6 +50,6 @@ jobs:
             ASSET_ID=$(jq '.assetId' $TMP/exchange.json)
             mkdir -p $DESIGN_CENTER/$ASSET_ID
             mv $TMP/* $DESIGN_CENTER/$ASSET_ID
+            rm -rf $TMP
+            gh pr create --title "Pulling updates from Design Center" --body "This is an automated PR to sync GitHub and Design Center" --base main --head feature/$ASSET_ID
           done
-          rm -rf $TMP
-          tree $DESIGN_CENTER
