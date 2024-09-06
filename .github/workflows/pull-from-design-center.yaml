@@ -32,6 +32,7 @@ jobs:
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Creating temporary folders
           mkdir -p design-center
