@@ -36,7 +36,6 @@ jobs:
         run: |
           # Creating temporary folders
           mkdir -p design-center
-          mkdir -p tmp
           
           # Creating environment variables
           TMP=tmp
@@ -45,6 +44,7 @@ jobs:
           # Navigating Design Center Projects
           anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq -c '.[]' | while read -r PROJECT
           do
+            mkdir -p tmp
             PROJECT_NAME=$(echo $PROJECT | jq -r '.name')
             echo "Downloading $PROJECT_NAME"
             anypoint-cli-v4 designcenter:project:download "$PROJECT_NAME" $TMP
@@ -52,8 +52,7 @@ jobs:
             mkdir -p $DESIGN_CENTER/$ASSET_ID
             mv $TMP/* $DESIGN_CENTER/$ASSET_ID
             rm -rf $TMP
-            git checkout -b feature/$ASSET_ID
-            git add .
-            git commit -m "Pulling updates from Design Center"
-            gh pr create --title "Pulling updates from Design Center" --body "This is an automated PR to sync GitHub and Design Center" --base main --head feature/$ASSET_ID
           done
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7.0.1
+            
