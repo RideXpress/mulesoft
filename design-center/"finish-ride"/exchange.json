@@ -1,0 +1,10 @@
+{
+  "main": "finish-ride.raml",
+  "name": "Finish Ride",
+  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+  "assetId": "finish-ride",
+  "version": "1.0.0",
+  "classifier": "raml",
+  "tags": [],
+  "descriptorVersion": "1.0.0"
+}
