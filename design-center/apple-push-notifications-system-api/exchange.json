@@ -1,0 +1,10 @@
+{
+  "main": "apple-push-notifications-system-api.raml",
+  "name": "Apple Push Notifications System API",
+  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+  "assetId": "apple-push-notifications-system-api",
+  "version": "1.0.0",
+  "classifier": "raml",
+  "tags": [],
+  "descriptorVersion": "1.0.0"
+}
