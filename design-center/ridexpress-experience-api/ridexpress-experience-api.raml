@@ -5,9 +5,9 @@ securitySchemes:
   oauth: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/oauth-security-scheme/1.0.0/oauth-security-scheme.raml
 
 uses:
-  users: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/user-data-types/1.0.0/user-data-types.raml
-  commons: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types/1.0.0/commons.raml
-  rides:  exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/ride-data-types/1.0.0/rides.raml
+  users: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/user-data-type/1.0.0/user-data-type.raml
+  commons: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/commons.raml
+  rides:  exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/ride-data-type/1.0.0/ride-data-type.raml
 
 securedBy:
   - oauth
@@ -55,9 +55,9 @@ resourceTypes:
   /vehicles:
     type:
       collection:
-        resourceTypeGet: commons.car
-        resourceTypePut: commons.car
-        resourceTypePost: commons.car
+        resourceTypeGet: commons.vehicle
+        resourceTypePut: commons.vehicle
+        resourceTypePost: commons.vehicle
         exampleGetResponse: !include examples/user/user-vehicles-get.json
         examplePutRequest: !include examples/user/user-vehicles-get.json
         examplePostRequest: !include examples/user/user-vehicles-get.json
