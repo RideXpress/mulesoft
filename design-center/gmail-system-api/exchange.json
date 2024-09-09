@@ -1,0 +1,10 @@
+{
+  "main": "gmail-system-api.raml",
+  "name": "Gmail System API",
+  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+  "assetId": "gmail-system-api",
+  "version": "1.0.0",
+  "classifier": "raml",
+  "tags": [],
+  "descriptorVersion": "1.0.0"
+}
