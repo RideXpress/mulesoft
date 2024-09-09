@@ -14,7 +14,7 @@
     },
     {
       "version": "1.0.0",
-      "assetId": "collection",
+      "assetId": "collection-resource-type",
       "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
       "provided": false
     },
@@ -26,13 +26,13 @@
     },
     {
       "version": "1.0.0",
-      "assetId": "user-data-types",
+      "assetId": "user-data-type",
       "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
       "provided": false
     },
     {
       "version": "1.0.0",
-      "assetId": "common-data-types",
+      "assetId": "common-data-types-library",
       "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
       "provided": false
     }
@@ -40,8 +40,8 @@
   "version": "1.0.0",
   "descriptorVersion": "1.0.0",
   "classifier": "raml",
-  "main": "ridexpress.raml",
-  "assetId": "ridexpress",
+  "main": "ridexpress-experience-api.raml",
+  "assetId": "ridexpress-experience-api",
   "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "name": "RideXpress"
+  "name": "RideXpress Experience API"
 }
