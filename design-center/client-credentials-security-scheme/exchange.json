@@ -1,8 +1,8 @@
 {
-  "main": "client-credentials.raml",
-  "name": "Client Credentials",
+  "main": "client-credentials-security-scheme.raml",
+  "name": "Client Credentials Security Scheme",
   "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "assetId": "client-credentials",
+  "assetId": "client-credentials-security-scheme",
   "version": "1.0.0",
   "classifier": "raml-fragment",
   "tags": [
