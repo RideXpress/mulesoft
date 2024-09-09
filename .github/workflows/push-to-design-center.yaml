@@ -33,4 +33,7 @@ jobs:
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          PROJECT=gmail-system-api
+          PROJECT_NAME=$(jq '.name' design-center/$PROJECT/exchange.json)
+          anypoint-cli-v4 designcenter:project:create --type raml --name $PROJECT_NAME
           anypoint-cli-v4 designcenter:project:upload gmail-system-api design-center/gmail-system-api
