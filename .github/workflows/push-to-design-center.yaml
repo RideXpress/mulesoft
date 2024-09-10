@@ -1,5 +1,5 @@
 name: Push Design Center Projects
-run-name: Push updates from Design Center run by ${{ github.actor }}
+run-name: Push updates to Design Center run by ${{ github.actor }}
 on:
   workflow_dispatch:
 
@@ -33,7 +33,16 @@ jobs:
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          PROJECT=gmail-system-api
-          PROJECT_NAME=$(jq -r '.name' design-center/$PROJECT/exchange.json)
-          anypoint-cli-v4 designcenter:project:create --type raml "$PROJECT_NAME"
-          anypoint-cli-v4 designcenter:project:upload "$PROJECT_NAME" design-center/gmail-system-api
+          PROJECT_FOLDER=gmail-system-api
+          DESIGN_CENTER_PROJECT_NAME=$(jq -r '.name' design-center/$PROJECT_FOLDER/exchange.json)
+          EXCHANGE_GROUP_ID=$(jq -r '.groupId' design-center/$PROJECT_FOLDER/exchange.json)
+          EXCHANGE_ASSET_ID=$(jq -r '.assetId' design-center/$PROJECT_FOLDER/exchange.json)
+          EXCHANGE_ASSET_VERSION=$(jq -r '.version' design-center/$PROJECT_FOLDER/exchange.json)
+          EXCHANGE_API_VERSION=v1
+          EXCHANGE_MAIN_FILE=$(jq -r '.main' design-center/$PROJECT_FOLDER/exchange.json)
+          
+          cd design-center/$PROJECT_FOLDER; zip -r raml.zip *; mv raml.zip ../../; cd ../../
+          
+          anypoint-cli-v4 designcenter:project:create --type raml "$DESIGN_CENTER_PROJECT_NAME"
+          anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
+          anypoint-cli-v4 exchange:asset:upload --name "$DESIGN_CENTER_PROJECT_NAME" --status development --apiVersion $EXCHANGE_API_VERSION --files="{\"raml.zip\": \"raml.zip\"}" $ASSET_ID/$ASSET_VERSION
