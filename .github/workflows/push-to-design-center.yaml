@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  pull-from-design-center:
+  push-to-design-center:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
