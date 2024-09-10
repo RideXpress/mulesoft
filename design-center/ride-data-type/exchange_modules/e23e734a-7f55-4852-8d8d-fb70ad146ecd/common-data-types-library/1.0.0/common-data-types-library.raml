@@ -2,7 +2,6 @@
 usage:
 
 types:
-
   apiResponse:
     type: object
     properties:
@@ -13,8 +12,8 @@ types:
 
   userType:
     enum:
-      - Driver
-      - Passenger
+      - DRIVER
+      - PASSENGER
 
   emailType:
     type: string
@@ -26,7 +25,7 @@ types:
     pattern:  ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
     example: "e58ed763-928c-4155-bee9-fdbaaadc15f3"
   
-  car: 
+  vehicle: 
     type: object
     properties:
       id:
