@@ -54,5 +54,5 @@ jobs:
           anypoint-cli-v4 designcenter:project:create --type "$DESIGN_CENTER_PROJECT_TYPE" "$DESIGN_CENTER_PROJECT_NAME"
           echo "Uploading \"$DESIGN_CENTER_PROJECT_NAME\" to Design Center"
           anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
-          echo "Uploading $EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION $EXCHANGE_ASSET_TYPE to Exchange"
-          anypoint-cli-v4 exchange:asset:upload --name "$DESIGN_CENTER_PROJECT_NAME" --type "$EXCHANGE_ASSET_TYPE" --status "development" --properties="{\"mainFile\": \"$EXCHANGE_MAIN_FILE\", \"apiVersion\": \"v1\"}" --files="{\"raml.zip\": \"raml.zip\"}" "$EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION"
+          #echo "Uploading $EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION $EXCHANGE_ASSET_TYPE to Exchange"
+          #anypoint-cli-v4 exchange:asset:upload --name "$DESIGN_CENTER_PROJECT_NAME" --type "$EXCHANGE_ASSET_TYPE" --status "development" --properties="{\"mainFile\": \"$EXCHANGE_MAIN_FILE\", \"apiVersion\": \"v1\"}" --files="{\"raml.zip\": \"raml.zip\"}" "$EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION"
