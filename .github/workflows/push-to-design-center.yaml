@@ -45,4 +45,4 @@ jobs:
           
           anypoint-cli-v4 designcenter:project:create --type raml "$DESIGN_CENTER_PROJECT_NAME"
           anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
-          anypoint-cli-v4 exchange:asset:upload --name="$DESIGN_CENTER_PROJECT_NAME" --status=development --apiVersion=$EXCHANGE_API_VERSION --files="{\"raml.zip\": \"raml.zip\"}" $EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION
+          anypoint-cli-v4 exchange:asset:upload --name="$DESIGN_CENTER_PROJECT_NAME" --status=development --apiVersion=$EXCHANGE_API_VERSION --files="{\"raml.zip\": \"raml.zip\"}" "$EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION"
