@@ -41,7 +41,7 @@ jobs:
           EXCHANGE_API_VERSION=v1
           EXCHANGE_MAIN_FILE=$(jq -r '.main' design-center/$PROJECT_FOLDER/exchange.json)
           
-          cd design-center/$PROJECT_FOLDER; zip -r raml.zip *; mv raml.zip ../../; cd ../../
+          cd design-center/$PROJECT_FOLDER; rm exchange.json; zip -r raml.zip *; mv raml.zip ../../; cd ../../
           
           echo "Creating \"$DESIGN_CENTER_PROJECT_NAME\" in Design Center"
           anypoint-cli-v4 designcenter:project:create --type raml "$DESIGN_CENTER_PROJECT_NAME"
