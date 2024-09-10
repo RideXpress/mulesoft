@@ -33,7 +33,7 @@ jobs:
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          PROJECT_FOLDER=oauth-security-scheme
+          PROJECT_FOLDER=client-credentials-security-scheme
           DESIGN_CENTER_PROJECT_NAME=$(jq -r '.name' design-center/$PROJECT_FOLDER/exchange.json)
           DESIGN_CENTER_PROJECT_TYPE=$(jq -r '.classifier' design-center/$PROJECT_FOLDER/exchange.json)
           EXCHANGE_GROUP_ID=$(jq -r '.groupId' design-center/$PROJECT_FOLDER/exchange.json)
