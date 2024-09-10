@@ -48,7 +48,9 @@ jobs:
             EXCHANGE_ASSET_TYPE=$DESIGN_CENTER_PROJECT_TYPE
           fi
           
-          cd design-center/$PROJECT_FOLDER; rm exchange.json; rm -rf exchange_modules; zip -r raml.zip *; mv raml.zip ../../; cd ../../
+          cd design-center/$PROJECT_FOLDER; 
+          #rm exchange.json; 
+          rm -rf exchange_modules; zip -r raml.zip *; mv raml.zip ../../; cd ../../
           
           echo "Creating \"$DESIGN_CENTER_PROJECT_NAME\" in Design Center"
           anypoint-cli-v4 designcenter:project:create --type "$DESIGN_CENTER_PROJECT_TYPE" --fragmentType libraries "$DESIGN_CENTER_PROJECT_NAME"
