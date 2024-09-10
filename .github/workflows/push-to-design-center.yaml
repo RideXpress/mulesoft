@@ -48,4 +48,4 @@ jobs:
           echo "Uploading \"$DESIGN_CENTER_PROJECT_NAME\" to Design Center"
           anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
           echo "Uploading $EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION to Exchange"
-          anypoint-cli-v4 exchange:asset:upload --name="$DESIGN_CENTER_PROJECT_NAME" --status=development --apiVersion=$EXCHANGE_API_VERSION --files="{\"raml.zip\": \"raml.zip\"}" "$EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION"
+          anypoint-cli-v4 exchange:asset:upload --name "$DESIGN_CENTER_PROJECT_NAME" --status "development" --properties="{\"mainFile\": \"$EXCHANGE_MAIN_FILE\", \"apiVersion\": \"v1\"}" --files="{\"raml.zip\": \"raml.zip\"}" "$EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION"
