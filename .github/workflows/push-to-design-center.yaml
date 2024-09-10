@@ -50,8 +50,8 @@ jobs:
           
           cd design-center/$PROJECT_FOLDER; rm exchange.json; zip -r raml.zip *; mv raml.zip ../../; cd ../../
           
-          echo "Creating \"$DESIGN_CENTER_PROJECT_NAME\" in Design Center"
-          anypoint-cli-v4 designcenter:project:create --type "$DESIGN_CENTER_PROJECT_TYPE" --fragmentType type "$DESIGN_CENTER_PROJECT_NAME"
+          #echo "Creating \"$DESIGN_CENTER_PROJECT_NAME\" in Design Center"
+          #anypoint-cli-v4 designcenter:project:create --type "$DESIGN_CENTER_PROJECT_TYPE" --fragmentType type "$DESIGN_CENTER_PROJECT_NAME"
           echo "Uploading \"$DESIGN_CENTER_PROJECT_NAME\" to Design Center"
           anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
           #echo "Uploading $EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION $EXCHANGE_ASSET_TYPE to Exchange"
