@@ -5,9 +5,8 @@
   "assetId": "oauth-security-scheme",
   "version": "1.0.0",
   "classifier": "raml-fragment",
-  "tags": [],
-  "descriptorVersion": "1.0.0",
-  "organizationId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "apiVersion": "v1",
-  "originalFormatVersion": "1.0"
+  "tags": [
+    "type"
+  ],
+  "descriptorVersion": "1.0.0"
 }
