@@ -1,0 +1,46 @@
+#%RAML 1.0 ResourceType
+usage: This resourceType should be used for any collection items.
+
+traits:
+  errorsResponses: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/error-responses/1.0.0/error-responses.raml
+
+
+description: The collection of <<resourcePathName>>
+is : [errorsResponses]
+get?:
+  description: Get all <<resourcePathName>>
+  responses:
+    200:
+      description: Successful call returns an array of <<resourcePathName | !singularize>> as json
+      body:
+        application/json:
+          type: <<resourceTypeGet>>[]
+          example: |
+              <<exampleGetResponse>>
+      headers:        
+        itemsCount?: integer
+        totalItemsCount?: integer
+        hasNextPage?: boolean
+        nextPageIndex?: integer        
+        
+post?:
+  description: Create a new <<resourcePathName | !singularize>>
+  body:
+    application/json:
+      type: <<resourceTypePost>>
+      example: |
+              <<examplePostRequest>>
+  responses: 
+    201:
+      description: Successful creates a <<resourcePathName | !singularize>>
+      body: 
+        application/json:
+put?:
+  description: Upserts a new <<resourcePathName | !singularize>>
+  body:
+    application/json:
+        type: <<resourceTypePut>>
+        example: |
+              <<examplePutRequest>>
+  responses:
+    204:               
