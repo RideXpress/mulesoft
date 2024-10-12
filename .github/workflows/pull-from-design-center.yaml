@@ -1,25 +1,41 @@
 name: Pull Design Center Projects
-run-name: Syncronization from Design Center Action run by ${{ github.actor }}
+run-name: Pulling updates from Design Center run by ${{ github.actor }}
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * MON'
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yaml
   pull-from-design-center:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node JS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+      - name: Install Anypoint CLI v4
+        run: npm install -g anypoint-cli-v4
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+      - name: Install Maven 3.9.8
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '3.9.8'
+      - run: echo "Setup completed"
       - name: Download Design Center Projects
         env:
           ANYPOINT_ORG: ${{ vars.ANYPOINT_ORG }}
           ANYPOINT_ENV: ${{ vars.ANYPOINT_ENV }}
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Creating temporary folders
           mkdir -p design-center
-          mkdir -p tmp
           
           # Creating environment variables
           TMP=tmp
@@ -28,12 +44,20 @@ jobs:
           # Navigating Design Center Projects
           anypoint-cli-v4 designcenter:project:list --output json --pageSize 1000 | jq -c '.[]' | while read -r PROJECT
           do
+            mkdir -p tmp
             PROJECT_NAME=$(echo $PROJECT | jq -r '.name')
             echo "Downloading $PROJECT_NAME"
             anypoint-cli-v4 designcenter:project:download "$PROJECT_NAME" $TMP
-            ASSET_ID=$(jq '.assetId' $TMP/exchange.json)
+            ASSET_ID=$(jq -r '.assetId' $TMP/exchange.json)
             mkdir -p $DESIGN_CENTER/$ASSET_ID
             mv $TMP/* $DESIGN_CENTER/$ASSET_ID
+            rm -rf $TMP
           done
-          rm -rf $TMP
-          tree $DESIGN_CENTER
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7.0.1
+        with:
+          commit-message: "Pulling updates from Design Center"
+          title: "Pulling updates from Design Center"
+          body: "This Pull Request was automatically created by the GitHub Action to pull updates from Design Center."
+          branch: "feature/pull-from-design-center"
+          base: "main"

@@ -2,7 +2,7 @@
   "dependencies": [
     {
       "version": "1.0.0",
-      "assetId": "common-data-type",
+      "assetId": "common-data-types-library",
       "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
       "provided": false
     }
@@ -11,10 +11,10 @@
   "descriptorVersion": "1.0.0",
   "classifier": "raml-fragment",
   "main": "user-data-type.raml",
-  "assetId": "user-data-types",
+  "assetId": "user-data-type",
   "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
   "tags": [],
-  "name": "User Data Types",
+  "name": "User Data Type",
   "organizationId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
   "apiVersion": "v1",
   "originalFormatVersion": "1.0"
