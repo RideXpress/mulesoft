@@ -11,7 +11,7 @@
   "descriptorVersion": "1.0.0",
   "classifier": "raml-fragment",
   "main": "user-data-type.raml",
-  "assetId": "user-data-types",
+  "assetId": "user-data-type",
   "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
   "tags": [],
   "name": "User Data Type",
