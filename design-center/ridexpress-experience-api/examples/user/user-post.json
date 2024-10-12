@@ -5,7 +5,7 @@
   "firstName": "Felipe",
   "middleName": "Test",
   "lastName": "Ocadiz",
-  "userType": "Driver",
+  "userType": "DRIVER",
   "address": "",
   "zipCode": "",
   "driverLicense": "",
