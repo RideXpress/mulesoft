@@ -2,7 +2,7 @@
   "dependencies": [
     {
       "version": "1.0.0",
-      "assetId": "common-data-type",
+      "assetId": "common-data-types-library",
       "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
       "provided": false
     }
