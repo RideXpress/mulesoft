@@ -1,0 +1,23 @@
+{
+  "id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20",
+  "rate": "27.86",
+  "pickupLocation": "",
+  "destination": "",
+  "destinationName": "",
+  "status": "",
+  "route": {
+    "ToDo": "Review route structure"                      
+  },
+  "passenger": {
+    "firstName": "",
+    "profilePicture": "",
+    "rating": 4.3
+  },
+  "driver": {
+    "firstName": "",
+    "profilePicture": "",
+    "rating": 4.7
+  },
+  "lastModifiedDate": "",
+  "createdDate": ""
+}

@@ -1,6 +1,6 @@
 #%RAML 1.0 Library
 uses:
-  commons: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/common-data-types-library.raml
+  common: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/common-data-types-library.raml
 
 types:
   user:
@@ -8,7 +8,7 @@ types:
     description: This is the User main entity
     properties:
       id: 
-        type: commons.idType
+        type: common.idType
         required: false
         description: unique Id of the user, using a UUID type
       userName:
@@ -17,7 +17,7 @@ types:
         example: "focadiz"
         description: User name, this value must be unique in the system
       email:
-        type: commons.emailType
+        type: common.emailType
         required: false
         description: The email of the user
       mobile:
@@ -41,9 +41,9 @@ types:
         example: "Ocadiz"
         description: Last name of the user
       userType:
-        type: commons.userType | nil
+        type: common.userType | nil
         required: false
-        example: "Driver"
+        example: "DRIVER"
         description: Type of the user
       address:
         type: string
@@ -57,4 +57,4 @@ types:
         description:
       vehicles:
         required: false
-        type: commons.car[]
+        type: common.vehicle[]

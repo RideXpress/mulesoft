@@ -1,13 +1,1 @@
-{
-  "main": "common-data-types-library.raml",
-  "name": "Common Data Types Library",
-  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "assetId": "common-data-types-library",
-  "version": "1.0.0",
-  "classifier": "raml-fragment",
-  "tags": [],
-  "descriptorVersion": "1.0.0",
-  "organizationId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "apiVersion": "v1",
-  "originalFormatVersion": "1.0"
-}
+{"main":"common-data-types-library.raml","name":"Common Data Types Library","groupId":"e23e734a-7f55-4852-8d8d-fb70ad146ecd","assetId":"common-data-types-library","version":"1.0.0","classifier":"raml-fragment","tags":[],"descriptorVersion":"1.0.0","organizationId":"e23e734a-7f55-4852-8d8d-fb70ad146ecd","apiVersion":"v1","originalFormatVersion":"1.0","metadata":{"projectId":"931515a7-db3c-4df8-9257-fcbc806bee73","branchId":"master","commitId":"8dbc3f9a9f08ad61e1881358f7a92dbdf5a475e4"}}
