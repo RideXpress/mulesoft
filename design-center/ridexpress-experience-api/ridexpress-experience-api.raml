@@ -54,6 +54,13 @@ traits:
       description: Returns the driver's vehicles
       queryParameters:
         active:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                !include examples/user/user-vehicles-get.json
+              
 
     /{id}:
       is : [transactionId]
