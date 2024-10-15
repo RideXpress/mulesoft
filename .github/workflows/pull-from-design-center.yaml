@@ -49,6 +49,7 @@ jobs:
             echo "Downloading $PROJECT_NAME"
             anypoint-cli-v4 designcenter:project:download "$PROJECT_NAME" $TMP
             ASSET_ID=$(jq -r '.assetId' $TMP/exchange.json)
+            rm -rf $DESIGN_CENTER/$ASSET_ID
             mkdir -p $DESIGN_CENTER/$ASSET_ID
             mv $TMP/* $DESIGN_CENTER/$ASSET_ID
             rm -rf $TMP
