@@ -1,22 +1,19 @@
 #%RAML 1.0
-title: RideXpress
+title: RideXpress Experience API
 
 securitySchemes:
   oauth: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/oauth-security-scheme/1.0.0/oauth-security-scheme.raml
 
 uses:
   users: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/user-data-type/1.0.0/user-data-type.raml
-  commons: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/commons.raml
+  commons: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/common-data-types-library.raml
   rides:  exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/ride-data-type/1.0.0/ride-data-type.raml
 
 securedBy:
   - oauth
 
 traits:
-  transactionId: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/transaction-id-trait/1.0.0/transaction-id.raml
-
-resourceTypes:
-  collection: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/collection/1.0.0/collection.raml
+  transactionId: !include exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/transaction-id-trait/1.0.0/transaction-id-trait.raml
 
 /user:
   is:
@@ -53,20 +50,10 @@ resourceTypes:
             example: !include examples/user/user-get.json
               
   /vehicles:
-    type:
-      collection:
-        resourceTypeGet: commons.vehicle
-        resourceTypePut: commons.vehicle
-        resourceTypePost: commons.vehicle
-        exampleGetResponse: !include examples/user/user-vehicles-get.json
-        examplePutRequest: !include examples/user/user-vehicles-get.json
-        examplePostRequest: !include examples/user/user-vehicles-get.json
     get:
       description: Returns the driver's vehicles
       queryParameters:
         active:
-    put:
-    post:
 
     /{id}:
       is : [transactionId]
