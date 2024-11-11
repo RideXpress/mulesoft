@@ -1,10 +1,17 @@
 {
-  "main": "db-system-api.raml",
-  "name": "DB System API",
-  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "assetId": "db-system-api",
+  "dependencies": [
+    {
+      "version": "1.0.0",
+      "assetId": "ride-data-type",
+      "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+      "provided": false
+    }
+  ],
   "version": "1.0.0",
+  "descriptorVersion": "1.0.0",
   "classifier": "raml",
-  "tags": [],
-  "descriptorVersion": "1.0.0"
+  "main": "db-system-api.raml",
+  "assetId": "db-system-api",
+  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+  "name": "DB System API"
 }

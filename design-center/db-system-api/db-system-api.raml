@@ -1,2 +1,172 @@
 #%RAML 1.0
 title: DB System API
+uses:
+  ride: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/ride-data-type/1.0.0/ride-data-type.raml 
+
+types:
+  
+  User:
+    type: object
+    properties:
+      id: integer
+      name: string
+      email: string
+      created_at: datetime
+      updated_at: datetime
+
+  Feedback:
+    type: object
+    properties:
+      rating: integer
+      comment: string
+      created_at: datetime
+
+  Location:
+    type: object
+    properties:
+      latitude: number
+      longitude: number
+      timestamp: datetime
+
+/ride:
+  /{id}:
+    get:
+      description: Get Ride Details
+      responses:
+        200:
+          body:
+            application/json:
+              type: ride.ride 
+              example: !include examples/rides/rides-get-by-id.json
+    
+    patch:
+      description: Update a Ride 
+      body:
+        application/json:
+          type: Ride
+      responses:
+        200:
+          body:
+            application/json:
+              type: Ride
+  
+  /feedback:
+    post:
+      description: Submit feedback for a ride
+      body:
+        application/json:
+          type: Feedback
+          example: !include examples/rides/rides-feedback-post.json  
+      responses:
+        201:
+          body:
+            application/json:
+              type: Feedback
+              example: !include examples/rides/rides-feedback-post-response.json
+
+/rides:
+  post:
+    description: Request a Ride Quote
+    body:
+      application/json:
+        type: Ride
+        example: !include examples/rides/rides-post.json
+    responses:
+      201:
+        body:
+          application/json:
+            type: Ride
+            example: !include examples/rides/rides-post-response.json
+
+/users:
+  post:
+    description: User Sign Up
+    body:
+      application/json:
+        type: User        
+        example: !include examples/user/user-post.json
+    responses:
+      201:
+        body:
+          application/json:
+            type: User
+            example: !include examples/user/user-response-201.json
+      400:
+        body:
+          application/json:
+            type: Feedback
+            example: !include examples/user/user-response-400.json 
+      409:
+        body:
+          application/json:
+            type: Feedback
+            example: !include examples/user/user-response-409.json 
+
+  get:
+    description: Gets user details
+    responses:
+      200:
+        body:
+          application/json:
+            type: User[]
+            example: !include examples/user/user-get.json
+
+  /{id}:
+    get:
+      description: Retrieve a user by ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: User
+              example: !include examples/user/user-id-get.json
+
+    patch:
+      description: Update user information by ID
+      body:
+        application/json:
+          type: User
+      responses:
+        200:
+          body:
+            application/json:
+              type: User
+              example: !include examples/user/user-id-patch-response.json
+
+    /location:
+      get:
+        description: Returns the driver's realtime location
+        responses:
+          200:
+            body:
+              application/json:
+                type: Location
+                example: !include examples/rides/rides-loc-passenger-get.json 
+      post:
+        description: Update user’s location
+        body:
+          application/json:
+            type: Location
+        responses:
+          201:
+            body:
+              application/json:
+                type: Location
+                example: !include examples/rides/rides-location-post-response.json
+
+    /feedback:
+      post:
+        description: Submit feedback for a user
+        body:
+          application/json:
+            type: Feedback
+        responses:
+          201:
+            body:
+              application/json:
+                type: Feedback
+                example: !include examples/user/user-feedback-post-response.json
+
+              
+
+                
