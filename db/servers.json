@@ -1,0 +1,10 @@
+{"Servers": {"1": {
+    "Group": "Servers",
+    "Name": "RideXPress",
+    "Host": "db",
+    "Port": 5432,
+    "MaintenanceDB": "postgres",
+    "Username": "ridexpress",
+    "PassFile": "/pgpass",
+    "SSLMode": "prefer"
+  }}}

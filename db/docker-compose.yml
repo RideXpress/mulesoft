@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  db:
+    image: postgres
+    container_name: ridexpress_pgdb
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ridexpress
+      POSTGRES_PASSWORD: ridexpress
+    volumes:
+      - local_ridexpress_pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ridexpress_pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ridexpress.com
+      PGADMIN_DEFAULT_PASSWORD: ridexpress
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json        
+    depends_on:
+      - "db"
+
+volumes:
+  local_ridexpress_pgdata:
+  pgadmin_ridexpress_data:
