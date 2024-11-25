@@ -1,0 +1,45 @@
+#%RAML 1.0 Library
+usage:
+  
+uses:
+  common: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/common-data-types-library.raml
+  payment: payment-data-type.raml
+  user: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/user-data-type/1.0.0/user-data-type.raml
+
+
+types:
+  ride:
+    type: object
+    description: create ride request
+    properties:
+      id?: common.idType
+      rate?: number
+      pickupLocation?:
+      destination?:
+      destinationName?:
+      payment: payment.payment
+      user: user.user
+      status?: rideStatus
+
+  rideResponse:
+    type: object
+    properties:
+      id: 
+        type: common.idType
+        required: true
+      
+         
+
+  rideStatus:
+    enum:
+      - NEW
+      - WAITING_FOR_DRIVER
+      - DRIVING_TO_PASSENGER_LOCATION
+      - WAITING_FOR_PASSANGER
+      - CANCELED_FOR_REFUND
+      - CANCELED_WITHOUT_REFUND
+      - PASSENGER_GETS_INTO_THE_CAR
+      - IN_ROUTE
+      - ARRIVED_AT_DESTINATION
+      - FINISHED
+      - ACCEPTED_BY_DRIVER

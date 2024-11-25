@@ -1,0 +1,60 @@
+#%RAML 1.0 Library
+uses:
+  common: exchange_modules/e23e734a-7f55-4852-8d8d-fb70ad146ecd/common-data-types-library/1.0.0/common-data-types-library.raml
+
+types:
+  user:
+    type: object
+    description: This is the User main entity
+    properties:
+      id: 
+        type: common.idType
+        required: false
+        description: unique Id of the user, using a UUID type
+      userName:
+        type: string
+        required: false
+        example: "focadiz"
+        description: User name, this value must be unique in the system
+      email:
+        type: common.emailType
+        required: false
+        description: The email of the user
+      mobile:
+        type: string
+        required: false
+        example: "4153435678"
+        description:
+      firstName:
+        type: string
+        required: false
+        example: "Felipe"
+        description: First name of the user
+      middleName:
+        type: string | nil
+        required: false
+        example: "Juan"
+        description: Middle name of the user
+      lastName:
+        type: string
+        required: false
+        example: "Ocadiz"
+        description: Last name of the user
+      userType:
+        type: common.userType | nil
+        required: false
+        example: "DRIVER"
+        description: Type of the user
+      address:
+        type: string
+        required: false
+        example: "Alem 856, Trelew"
+        description: Address of the user
+      driverLicense:
+        type: string
+        required: false
+        example:
+        description:
+      vehicles:
+        required: false
+        type: common.vehicle[]
