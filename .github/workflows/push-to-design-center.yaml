@@ -52,10 +52,10 @@ jobs:
           #rm exchange.json; 
           rm -rf exchange_modules; zip -r raml.zip *; mv raml.zip ../../; cd ../../
           
-          echo "Creating \"$DESIGN_CENTER_PROJECT_NAME\" in Design Center"
-          anypoint-cli-v4 designcenter:project:create --type "$DESIGN_CENTER_PROJECT_TYPE" --fragmentType library "$DESIGN_CENTER_PROJECT_NAME"
-          echo "Uploading \"$DESIGN_CENTER_PROJECT_NAME\" to Design Center"
-          anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
+          #echo "Creating \"$DESIGN_CENTER_PROJECT_NAME\" in Design Center"
+          #anypoint-cli-v4 designcenter:project:create --type "$DESIGN_CENTER_PROJECT_TYPE" --fragmentType library "$DESIGN_CENTER_PROJECT_NAME"
+          #echo "Uploading \"$DESIGN_CENTER_PROJECT_NAME\" to Design Center"
+          #anypoint-cli-v4 designcenter:project:upload "$DESIGN_CENTER_PROJECT_NAME" design-center/$PROJECT_FOLDER
           #echo "Uploading $EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION $EXCHANGE_ASSET_TYPE to Exchange"
           #anypoint-cli-v4 exchange:asset:upload --name "$DESIGN_CENTER_PROJECT_NAME" --type "$EXCHANGE_ASSET_TYPE" --status "development" --properties="{\"mainFile\": \"$EXCHANGE_MAIN_FILE\", \"apiVersion\": \"v1\", \"classifier\":\"raml-fragment\",  \"type\":\"raml-fragment\"}" --files="{\"raml.zip\": \"raml.zip\"}" "$EXCHANGE_GROUP_ID/$EXCHANGE_ASSET_ID/$EXCHANGE_ASSET_VERSION"
           curl --location --request POST 'https://anypoint.mulesoft.com/accounts/login' --header 'Content-Type: application/json' --header 'Accept: application/json' --data-raw '{ "username":"~~~Client~~~", "password":"$ANYPOINT_CLIENT_ID~?~$ANYPOINT_CLIENT_SECRET" }' | jq
