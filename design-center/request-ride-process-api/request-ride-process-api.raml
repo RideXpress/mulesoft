@@ -1,2 +1,40 @@
 #%RAML 1.0
 title: Request Ride
+
+uses:
+  rides:  request-ride-data-type.raml
+  
+
+/rides:
+  post:
+    description: Create Ride
+    body: 
+      application/json:
+        type: rides.ride
+        example: 
+
+    responses:
+      201:
+        body:
+          application/json:
+            type: rides.rideResponse
+    
+
+      
+
+
+  /{id}:
+    patch:
+
+/driver:
+  get:
+
+  /broadcast:
+    post:
+
+/notification:
+  /user:
+    post:
+
+  /driver:
+    post:

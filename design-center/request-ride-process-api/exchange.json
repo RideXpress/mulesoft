@@ -1,10 +1,23 @@
 {
-  "main": "request-ride-process-api.raml",
-  "name": "Request Ride Process API",
-  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
-  "assetId": "request-ride-process-api",
+  "dependencies": [
+    {
+      "version": "1.0.0",
+      "assetId": "common-data-types-library",
+      "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+      "provided": false
+    },
+    {
+      "version": "1.0.0",
+      "assetId": "user-data-type",
+      "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+      "provided": false
+    }
+  ],
   "version": "1.0.0",
+  "descriptorVersion": "1.0.0",
   "classifier": "raml",
-  "tags": [],
-  "descriptorVersion": "1.0.0"
+  "main": "request-ride-process-api.raml",
+  "assetId": "request-ride-process-api",
+  "groupId": "e23e734a-7f55-4852-8d8d-fb70ad146ecd",
+  "name": "Request Ride Process API"
 }

@@ -1,0 +1,27 @@
+#%RAML 1.0 DataType
+properties:
+  id:
+    type: string
+  lineItems:
+    type: array
+    items:
+      type: object
+      properties:
+        uid:
+          type: string
+        quantity:
+          type: number
+        name:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+  state:
+    type: string
+  createdAt:
+    type: datetime
+  updatedAt:
+    type: datetime
+  tenderId:
+    type: string
