@@ -1,0 +1,14 @@
+{
+  "id": "bXCVY6ncv943utlg25lD5bZ0IIAZY",
+  "lineItems": [ {
+        "uid": "Pejzm4v9UbRoTrrmDU57P",
+        "quantity": 1,
+        "name": "James Ride 1",
+        "price": 100,
+        "currency": "USD"}
+  ],
+  "state": "OPENED",
+  "createdAt": "2024-12-14T17:39:44.205Z",
+  "updatedAt": "2024-12-14T17:45:01.000Z",
+  "tenderId": "j7nDnlTT22OyQ4duWgtjYfEtfLTZY"
+}

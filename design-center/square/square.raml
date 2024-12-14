@@ -1,0 +1,22 @@
+#%RAML 1.0
+title: Square
+
+types:
+  orders: !include types/orders.raml
+/payments:
+  /link:
+    post:
+/orders:
+  /{orderId}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: orders
+              example: !include examples/orders.json
+  post:
+      
+
+
+    
