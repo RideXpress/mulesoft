@@ -3,9 +3,23 @@ title: Square
 
 types:
   orders: !include types/orders.raml
+  orderFulfillment: !include types/orderFulfillment.raml
+  paymentLink: !include types/paymentLink.raml
+  paymentLinkResponse: !include types/paymentLinkResponse.raml
 /payments:
   /link:
     post:
+      body:
+        application/json:
+          type: paymentLink
+          example: !include examples/paymentLink.json
+      responses:
+        200:
+          body:
+            application/json:
+              type: paymentLinkResponse
+              example: !include examples/paymentLinkResponse.json
+
 /orders:
   /{orderId}:
     get:
@@ -15,7 +29,20 @@ types:
             application/json:
               type: orders
               example: !include examples/orders.json
-  post:
+    put:
+      body:
+        application/json:
+          type: orderFulfillment
+          example: !include examples/orderFulfillment.json
+      responses:
+        200:
+          body:
+            application/json:
+              properties:                
+                message:
+                  type: string
+                  example: "Success"
+          
       
 
 
