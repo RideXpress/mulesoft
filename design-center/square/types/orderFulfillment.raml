@@ -1,0 +1,11 @@
+#%RAML 1.0 DataType
+properties:
+  state:
+    type: string
+    enum: [COMPLETED, CANCELED, DRAFT]
+  fulfillmentId:
+    type: string
+  locationId:
+    type: string
+  idempotencyKey:
+    type: string

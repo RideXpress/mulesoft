@@ -1,0 +1,9 @@
+{
+    "idempotencyKey": "cd9e25dc-d9f2-4430-aedb-61605070e95o",
+    "name": "Ride Juan C 3",
+    "amount": 1000,
+    "currency": "USD",
+    "allowTipping": true,
+    "redirectUrl": "https://www.google.com",
+    "locationId": "LY5CRPFZEA96D"
+  }
