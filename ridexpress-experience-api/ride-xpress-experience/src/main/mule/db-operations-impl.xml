@@ -1,0 +1,31 @@
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd     http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <db:config doc:id="589bde8f-73c4-4c47-a9e9-955080466aee" doc:name="Database Config" name="Database_Config">
+        <db:generic-connection driverClassName="org.postgresql.Driver" url="jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:6543/postgres?user=${db.username}&amp;password=${db.password}"></db:generic-connection>
+    </db:config>
+    <sub-flow name="get-rides-impl">
+        <db:select config-ref="Database_Config" doc:name="Select Rides">
+            <db:sql><![CDATA[SELECT ride_id,user_id,driver_id,status,start_location,end_location, created_at, updated_at from ridexpress.rides]]></db:sql>
+        </db:select>
+        <ee:transform doc:id="joghsj" doc:name="Transform">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+        output application/json
+        ---
+        payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </sub-flow>
+    <sub-flow name="get-user-by-id-impl">
+        <db:select doc:name="Select" doc:id="oltzns" config-ref="Database_Config">
+            <db:sql><![CDATA[select user_id, name, email, role, created_at , updated_at from ridexpress.users where user_id = :userId]]></db:sql>
+            <db:input-parameters><![CDATA[#[{userId : vars.id}]]]></db:input-parameters>    
+        </db:select>
+        <ee:transform doc:name="Transform" doc:id="mybfrf" >
+            <ee:message >
+                <ee:set-payload doc:name="Set payload" doc:id="iyztxm" ><![CDATA[%dw 2.0
+        output application/json
+        ---
+        payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform></sub-flow>
+</mule>
