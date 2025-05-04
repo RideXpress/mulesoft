@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="request-ride" doc:id="c61c0764-7610-4895-8531-7f5740711892" >
+		<amqp:listener doc:name="Listener" doc:id="39bcb91e-abcd-4cdd-bed4-97179afcb5de" config-ref="rabbitmq" queueName="rides"/>
+		<logger level="INFO" doc:name="Logger" doc:id="28b7c763-ce5b-498d-8f12-4caf59b578e7" message="#[payload]"/>
+	</flow>
+</mule>

@@ -1,5 +1,7 @@
 **/.vscode
-/ridexpress-experience-api/ride-xpress-experience/.mule
-.DS_Store
-/ridexpress-experience-api/ride-xpress-experience/.tooling-project
-/ridexpress-experience-api/ride-xpress-experience/target
+**/.settings/
+**/.project
+**/.classpath
+**/target/
+**/.mule/
+**/.DS_Store
