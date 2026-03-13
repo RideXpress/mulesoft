@@ -271,7 +271,7 @@ mulesoft/                              # Monorepo root
 - [ ] Implement flow:
   1. Track driver location updates
   2. Calculate ETA to passenger
-  3. Update ride status (`DRIVING_TO_PASSENGER_LOCATION` → `WAITING_FOR_PASSANGER`)
+  3. Update ride status (`DRIVING_TO_PASSENGER_LOCATION` → `WAITING_FOR_PASSANGER`*)
   4. Send push notifications for driver arrival
 
 | # | Endpoint | Status | Description |
@@ -469,6 +469,10 @@ CREATE TABLE ridexpress.vehicles (
 ```
 
 ### Rides Table
+
+> **Note**: The status enum value `WAITING_FOR_PASSANGER` contains a known typo inherited from the
+> RAML spec (`ride-data-type.raml`). The DB schema intentionally matches the RAML contract.
+> Consider correcting this to `WAITING_FOR_PASSENGER` in a future RAML spec update across all layers.
 
 ```sql
 CREATE TABLE ridexpress.rides (
