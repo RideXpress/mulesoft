@@ -5,35 +5,42 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
-	
-	<flow name="post:\users\(id)\code:ridexpress-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="post:\users\(id)\code:ridexpress-config" />
-    </flow>
-    
-        <flow name="post:\users:ridexpress-config">
-        <logger level="INFO" message="post:\users:ridexpress-config" />
-    </flow>
-    
-        <flow name="post:\users\(id)\location:ridexpress-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="post:\users\(id)\location:ridexpress-config" />
-    </flow>
-        <flow name="get:\users\(id)\location:ridexpress-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="get:\users\(id)\location:ridexpress-config" />
-        <flow-ref  name="get-user-by-id-impl" doc:name="get-user-by-id"/>
-    </flow>
-	</mule>
+
+	<flow name="post:\user:router">
+		<logger level="INFO" message="post:\user:router" />
+	</flow>
+
+	<flow name="get:\user:router">
+		<logger level="INFO" message="get:\user:router" />
+		<flow-ref name="get-user-by-id-impl" doc:name="get-user-by-id" />
+	</flow>
+
+	<flow name="put:\user:router">
+		<logger level="INFO" message="put:\user:router" />
+	</flow>
+
+	<flow name="delete:\user:router">
+		<logger level="INFO" message="delete:\user:router" />
+	</flow>
+
+	<flow name="get:\user\vehicles:router">
+		<logger level="INFO" message="get:\user\vehicles:router" />
+	</flow>
+
+	<flow name="put:\user\vehicles\(id):router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="put:\user\vehicles\(id):router" />
+	</flow>
+
+	<flow name="post:\user\geolocation:router">
+		<logger level="INFO" message="post:\user\geolocation:router" />
+	</flow>
+
+	<flow name="post:\user\attachments:router">
+		<logger level="INFO" message="post:\user\attachments:router" />
+	</flow>
+</mule>

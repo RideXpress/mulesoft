@@ -6,38 +6,114 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
-	
-	    <flow name="post:\rides:ridexpress-config">
-        <logger level="INFO" message="post:\rides:ridexpress-config" />
-		<amqp:publish doc:name="Publish" doc:id="d59e4c51-050d-4286-ae67-02dd112fdcf2" config-ref="rabbitmq"/>
-    </flow>
-        <flow name="post:\rides\(id)\feedback:ridexpress-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="post:\rides\(id)\feedback:ridexpress-config" />
-		<amqp:publish doc:name="Publish" doc:id="f00a2e0a-f7d3-4b37-8707-4ec3fbec268d" config-ref="rabbitmq"/>
-    </flow>
-        <flow name="get:\rides:ridexpress-config">
-        <logger level="INFO" message="get:\rides:ridexpress-config" />
-        <flow-ref  name="get-rides-impl" doc:name="get-rides-impl"/>
-    </flow>
-    <flow name="get:\rides\(id):ridexpress-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="get:\rides\(id):ridexpress-config" />
-    </flow>
-    <flow name="patch:\rides\(id):ridexpress-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="patch:\rides\(id):ridexpress-config" />
-    </flow>
-	</mule>
+
+	<flow name="get:\rides:router">
+		<logger level="INFO" message="get:\rides:router" />
+		<flow-ref name="get-rides-impl" doc:name="get-rides-impl" />
+	</flow>
+
+	<flow name="post:\rides:router">
+		<logger level="INFO" message="post:\rides:router" />
+		<amqp:publish doc:name="Publish" config-ref="rabbitmq" />
+	</flow>
+
+	<flow name="get:\rides\(id):router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id):router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\passenger:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\passenger:router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\passenger\location:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\passenger\location:router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\driver:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\driver:router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\driver\location:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\driver\location:router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\payment:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\payment:router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\route:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\route:router" />
+	</flow>
+
+	<flow name="post:\rides\(id)\feedback:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="post:\rides\(id)\feedback:router" />
+		<amqp:publish doc:name="Publish" config-ref="rabbitmq" />
+	</flow>
+
+	<flow name="get:\rides\(id)\status:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\status:router" />
+	</flow>
+
+	<flow name="put:\rides\(id)\status:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="put:\rides\(id)\status:router" />
+	</flow>
+
+	<flow name="get:\rides\(id)\summary:router">
+		<ee:transform doc:name="Transform Message">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\summary:router" />
+	</flow>
+</mule>
