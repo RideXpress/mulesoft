@@ -215,7 +215,7 @@ The integration platform supports the following patterns (from [Integration Arch
 | 4 | Retrieve driver's latest location + compute ETA | Process | `waiting-ride-process-api` |
 | 5 | Get driver location from DB | System | `database-system-api` → `GET /users/{driverId}/location` |
 | 6 | Calculate ETA to passenger pickup | System | `google-maps-system-api` → `GET /distance` |
-| 7 | Driver arrives → update status to `WAITING_FOR_PASSANGER` | System | `database-system-api` → `PATCH /ride/{id}` |
+| 7 | Driver arrives → update status to `WAITING_FOR_PASSANGER`\* | System | `database-system-api` → `PATCH /ride/{id}` |
 | 8 | Notify passenger of driver arrival | System | `push-notifications-system-api` → `POST /notify` |
 | 9 | Passenger gets in → status to `PASSENGER_GETS_INTO_THE_CAR` → `IN_ROUTE` | System | `database-system-api` → `PATCH /ride/{id}` |
 
