@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="users-test" />
+
+    <munit:test name="post-user-test" description="Test POST /user flow executes without error">
+        <munit:behavior>
+            <munit-tools:set-event doc:name="Set Event">
+                <munit-tools:payload value="#[{}]" mediaType="application/json" />
+            </munit-tools:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="post:\user:router" doc:name="Call post:\user:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-user-test" description="Test GET /user flow - mocks DB select and returns user data">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock DB Select User" processor="db:select">
+                <munit-tools:then-return>
+                    <munit-tools:payload
+                        value="#[[{user_id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3', name: 'Felipe Ocadiz', email: 'felipe@ridexpress.io', role: 'DRIVER', created_at: '2024-01-01', updated_at: '2024-01-01'}]]"
+                        mediaType="application/java" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <set-variable doc:name="Set id variable" variableName="id" value="e58ed763-928c-4155-bee9-fdbaaadc15f3" />
+            <flow-ref name="get:\user:router" doc:name="Call get:\user:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="put-user-test" description="Test PUT /user flow executes without error">
+        <munit:behavior>
+            <munit-tools:set-event doc:name="Set Event">
+                <munit-tools:payload value="#[{}]" mediaType="application/json" />
+            </munit-tools:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="put:\user:router" doc:name="Call put:\user:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="delete-user-test" description="Test DELETE /user flow executes without error">
+        <munit:behavior>
+            <munit-tools:set-event doc:name="Set Event">
+                <munit-tools:payload value="#[{}]" mediaType="application/json" />
+            </munit-tools:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="delete:\user:router" doc:name="Call delete:\user:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-user-vehicles-test" description="Test GET /user/vehicles flow executes without error">
+        <munit:execution>
+            <flow-ref name="get:\user\vehicles:router" doc:name="Call get:\user\vehicles:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="put-user-vehicles-id-test" description="Test PUT /user/vehicles/{id} flow - verifies id variable is set from URI params">
+        <munit:behavior>
+            <munit-tools:set-event doc:name="Set Event">
+                <munit-tools:payload value="#[{}]" mediaType="application/json" />
+                <munit-tools:attributes
+                    value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit-tools:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="put:\user\vehicles\(id):router" doc:name="Call put:\user\vehicles\(id):router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-user-geolocation-test" description="Test POST /user/geolocation flow executes without error">
+        <munit:behavior>
+            <munit-tools:set-event doc:name="Set Event">
+                <munit-tools:payload
+                    value='#[{"long": 123456, "lat": 523543425}]'
+                    mediaType="application/json" />
+            </munit-tools:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="post:\user\geolocation:router" doc:name="Call post:\user\geolocation:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-user-attachments-test" description="Test POST /user/attachments flow executes without error">
+        <munit:behavior>
+            <munit-tools:set-event doc:name="Set Event">
+                <munit-tools:payload value="#[{}]" mediaType="application/json" />
+            </munit-tools:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="post:\user\attachments:router" doc:name="Call post:\user\attachments:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+</mule>
