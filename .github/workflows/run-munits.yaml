@@ -1,0 +1,66 @@
+name: Run MUnit Tests
+run-name: MUnit Tests run by ${{ github.actor }}
+on:
+  push:
+    branches:
+      - 'copilot/**'
+permissions:
+  contents: read
+
+jobs:
+  munit-tests:
+    name: MUnit Tests - ridexpress-experience-api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Set up Maven 3.9.8
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '3.9.8'
+
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('ridexpress-experience-api/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Configure Maven settings
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << EOSETTINGS
+          <?xml version="1.0" encoding="UTF-8"?>
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>anypoint-exchange-v3</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+              <server>
+                <id>mulesoft-releases</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+            </servers>
+          </settings>
+          EOSETTINGS
+
+      - name: Run MUnit Tests
+        working-directory: ridexpress-experience-api
+        run: mvn -B --no-transfer-progress test
