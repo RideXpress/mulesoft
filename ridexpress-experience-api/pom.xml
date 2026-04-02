@@ -80,6 +80,19 @@
             <url>https://repository.mulesoft.org/releases/</url>
             <layout>default</layout>
         </repository>
+        <!-- Required for MUnit EE runtime BOM (com.mulesoft.mule.distributions) -->
+        <repository>
+            <id>mulesoft-enterprise-repository</id>
+            <name>MuleSoft Enterprise Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/releases-ee/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
@@ -87,6 +100,16 @@
             <name>mulesoft release repository</name>
             <layout>default</layout>
             <url>https://repository.mulesoft.org/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <!-- Required for MUnit EE runtime BOM (com.mulesoft.mule.distributions) -->
+        <pluginRepository>
+            <id>mulesoft-enterprise-repository</id>
+            <name>MuleSoft Enterprise Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/releases-ee/</url>
+            <layout>default</layout>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>

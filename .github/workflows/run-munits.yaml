@@ -57,6 +57,12 @@ jobs:
                 <username>~~~Client~~~</username>
                 <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
               </server>
+              <!-- Required for MUnit EE runtime BOM resolution -->
+              <server>
+                <id>mulesoft-enterprise-repository</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
             </servers>
           </settings>
           EOSETTINGS
