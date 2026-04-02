@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="rides-test" />
+
+    <munit:test name="get-rides-test" description="Test GET /rides flow - mocks DB select and returns rides list">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock DB Select Rides" processor="db:select">
+                <munit-tools:then-return>
+                    <munit-tools:payload
+                        value="#[[{ride_id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20', user_id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3', driver_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', status: 'NEW', start_location: '123456,523543425', end_location: '1321,235352', created_at: '2024-01-01', updated_at: '2024-01-01'}]]"
+                        mediaType="application/java" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="get:\rides:router" doc:name="Call get:\rides:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-rides-test" description="Test POST /rides flow - mocks AMQP publish">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock AMQP Publish" processor="amqp:publish">
+                <munit-tools:then-return />
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Request Payload">
+                <munit:payload value='#[{"pickupLocation": "123456,523543425", "destination": "1321,235352", "destinationName": "Cumaica Artesanos del Cafe"}]' />
+            </munit:set-event>
+            <flow-ref name="post:\rides:router" doc:name="Call post:\rides:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-test" description="Test GET /rides/{id} flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id):router" doc:name="Call get:\rides\(id):router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-passenger-test" description="Test GET /rides/{id}/passenger flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\passenger:router" doc:name="Call get:\rides\(id)\passenger:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-passenger-location-test" description="Test GET /rides/{id}/passenger/location flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\passenger\location:router" doc:name="Call get:\rides\(id)\passenger\location:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-driver-test" description="Test GET /rides/{id}/driver flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\driver:router" doc:name="Call get:\rides\(id)\driver:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-driver-location-test" description="Test GET /rides/{id}/driver/location flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\driver\location:router" doc:name="Call get:\rides\(id)\driver\location:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-payment-test" description="Test GET /rides/{id}/payment flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\payment:router" doc:name="Call get:\rides\(id)\payment:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-route-test" description="Test GET /rides/{id}/route flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\route:router" doc:name="Call get:\rides\(id)\route:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-rides-id-feedback-test" description="Test POST /rides/{id}/feedback flow - mocks AMQP publish">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock AMQP Publish" processor="amqp:publish">
+                <munit-tools:then-return />
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"rating": "5"}]' mediaType="application/json" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="post:\rides\(id)\feedback:router" doc:name="Call post:\rides\(id)\feedback:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-status-test" description="Test GET /rides/{id}/status flow - verifies id variable is set from URI params">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\status:router" doc:name="Call get:\rides\(id)\status:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="put-rides-id-status-test" description="Test PUT /rides/{id}/status flow - verifies id variable is set from URI params">
+        <munit:behavior>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"status": "CANCELED_FOR_REFUND"}]' mediaType="application/json" />
+                <munit:attributes
+                    value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="put:\rides\(id)\status:router" doc:name="Call put:\rides\(id)\status:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-summary-test" description="Test GET /rides/{id}/summary flow - verifies id variable is set from URI params">
+        <munit:behavior>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes
+                    value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+            </munit:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="get:\rides\(id)\summary:router" doc:name="Call get:\rides\(id)\summary:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+</mule>
