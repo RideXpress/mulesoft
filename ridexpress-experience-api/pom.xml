@@ -62,7 +62,7 @@
                     <argLines>
                         <argLine>-Dsecrets.path=test-secrets.properties</argLine>
                     </argLines>
-                    <runtimeVersion>4.11.0</runtimeVersion>
+                    <runtimeVersion>4.10.0</runtimeVersion>
                 </configuration>
             </plugin>
         </plugins>
