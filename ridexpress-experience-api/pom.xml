@@ -74,18 +74,18 @@
             <layout>default</layout>
         </repository>
         <repository>
-            <id>mulesoft-releases</id>
-            <name>MuleSoft Releases Repository</name>
-            <url>https://repository.mulesoft.org/releases/</url>
+            <id>mulesoft-public</id>
+            <name>MuleSoft Public Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
             <layout>default</layout>
         </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
-            <id>mulesoft-releases</id>
-            <name>mulesoft release repository</name>
+            <id>mulesoft-public</id>
+            <name>MuleSoft Public Repository</name>
             <layout>default</layout>
-            <url>https://repository.mulesoft.org/releases/</url>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>

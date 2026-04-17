@@ -53,7 +53,7 @@ jobs:
                 <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
               </server>
               <server>
-                <id>mulesoft-releases</id>
+                <id>mulesoft-public</id>
                 <username>~~~Client~~~</username>
                 <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
               </server>
