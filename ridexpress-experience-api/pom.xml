@@ -24,14 +24,6 @@
                 <artifactId>mule-maven-plugin</artifactId>
                 <version>${mule.maven.plugin.version}</version>
                 <extensions>true</extensions>
-                <configuration>
-                    <sharedLibraries>
-                        <sharedLibrary>
-                            <groupId>org.postgresql</groupId>
-                            <artifactId>postgresql</artifactId>
-                        </sharedLibrary>
-                    </sharedLibraries>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.mulesoft.munit.tools</groupId>
@@ -127,17 +119,6 @@
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-apikit-module</artifactId>
             <version>1.11.5</version>
-            <classifier>mule-plugin</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.7.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mule.connectors</groupId>
-            <artifactId>mule-db-connector</artifactId>
-            <version>1.14.14</version>
             <classifier>mule-plugin</classifier>
         </dependency>
         <dependency>

@@ -11,8 +11,19 @@
 
     <munit:config name="geolocations-test" />
 
-    <munit:test name="get-geolocations-test" description="Test GET /geolocations flow executes without error">
+    <munit:test name="get-geolocations-test" description="Test GET /geolocations flow - mocks Google Maps text search API">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock Google Maps text search" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"results": [], "status": "OK"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{headers: {}, queryParams: {search: 'coffee shop'}}]" />
+            </munit:set-event>
             <flow-ref name="get:\geolocations:router" doc:name="Call get:\geolocations:router" />
         </munit:execution>
         <munit:validation>
@@ -22,14 +33,19 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-geolocations-id-test" description="Test GET /geolocations/{id} flow - verifies id variable is set from URI params">
+    <munit:test name="get-geolocations-id-test" description="Test GET /geolocations/{id} flow - mocks Google Maps place details API and verifies id variable">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-                <munit:attributes
-                    value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock Google Maps place details" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"result": {"place_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "name": "Test Place"}, "status": "OK"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
             <flow-ref name="get:\geolocations\(id):router" doc:name="Call get:\geolocations\(id):router" />
         </munit:execution>
         <munit:validation>
@@ -40,3 +56,4 @@
     </munit:test>
 
 </mule>
+

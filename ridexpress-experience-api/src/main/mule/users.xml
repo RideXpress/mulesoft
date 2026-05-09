@@ -1,46 +1,285 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
 	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
 	<flow name="post:\user:router">
-		<logger level="INFO" message="post:\user:router" />
+		<logger level="INFO" message="post:\user:router - Creating user" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="user-sign-up-process-api" method="POST" path="/signup" doc:name="Call user-sign-up-process-api POST /signup">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Set 201 status">
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="HTTP:BAD_REQUEST" doc:name="Handle 400">
+				<ee:transform doc:name="Set 400 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request: " ++ (error.description default "invalid input")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">400</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - user sign-up process API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="get:\user:router">
-		<logger level="INFO" message="get:\user:router" />
-		<flow-ref name="get-user-by-id-impl" doc:name="get-user-by-id" />
+		<logger level="INFO" message="get:\user:router - Getting user" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="put:\user:router">
-		<logger level="INFO" message="put:\user:router" />
+		<logger level="INFO" message="put:\user:router - Updating user" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:BAD_REQUEST" doc:name="Handle 400">
+				<ee:transform doc:name="Set 400 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request: " ++ (error.description default "invalid input")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">400</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="delete:\user:router">
-		<logger level="INFO" message="delete:\user:router" />
+		<logger level="INFO" message="delete:\user:router - Deactivating user" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<ee:transform doc:name="Set deactivation payload">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{active: false}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request config-ref="database-system-api" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id} deactivate">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="get:\user\vehicles:router">
-		<logger level="INFO" message="get:\user\vehicles:router" />
+		<logger level="INFO" message="get:\user\vehicles:router - Getting user vehicles" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id ++ '/vehicles']" doc:name="Call database-system-api GET /users/{id}/vehicles">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+			<http:query-params><![CDATA[#[{active: attributes.queryParams.active}]]]></http:query-params>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="put:\user\vehicles\(id):router">
-		<ee:transform doc:name="Transform Message">
+		<ee:transform doc:name="Extract URI params">
 			<ee:variables>
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="put:\user\vehicles\(id):router" />
+		<logger level="INFO" message="put:\user\vehicles\(id):router - Updating vehicle" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="PUT" path="#['/users/' ++ vars.id ++ '/vehicles/' ++ vars.id]" doc:name="Call database-system-api PUT /users/{userId}/vehicles/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Vehicle not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="post:\user\geolocation:router">
-		<logger level="INFO" message="post:\user\geolocation:router" />
+		<logger level="INFO" message="post:\user\geolocation:router - Posting user geolocation" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="POST" path="#['/users/' ++ vars.id ++ '/location']" doc:name="Call database-system-api POST /users/{id}/location">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 
 	<flow name="post:\user\attachments:router">
-		<logger level="INFO" message="post:\user\attachments:router" />
+		<logger level="INFO" message="post:\user\attachments:router - Attachment storage not yet implemented" />
+		<ee:transform doc:name="Set 501 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Attachment storage not implemented"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">501</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
 	</flow>
+
 </mule>
+

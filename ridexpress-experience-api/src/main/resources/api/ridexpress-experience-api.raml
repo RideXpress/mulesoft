@@ -139,6 +139,25 @@ traits:
           application/json:
             type: rides.ride
             example: !include examples/rides/rides-post-response.json
+  /estimate:
+    post:
+      description: UC-10 UC-11 Fare estimate per ride type
+      body:
+        application/json:
+          type:
+            properties:
+              pickupLocation: string
+              destination: string
+              rideType: string
+      responses:
+        200:
+          body:
+            application/json:
+              type:
+                properties:
+                  estimatedFare: number
+                  estimatedDuration: integer
+                  rideType: string
   /{id}:
     get:
       description: Get Ride Details
@@ -246,7 +265,240 @@ traits:
             body:
               application/json:
                 type: rides.rideSummary
-                example: !include examples/rides/rides-summary-get.json  
+                example: !include examples/rides/rides-summary-get.json
+
+    /details:
+      get:
+        description: UC-15 Ride details including route info
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.ride
+
+    /receipt:
+      get:
+        description: UC-15 JSON receipt with ride and payment data
+        responses:
+          200:
+            body:
+              application/json:
+
+    /live-location:
+      get:
+        description: UC-12 Latest driver location for in-ride tracking
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.location
+
+    /share:
+      post:
+        description: UC-12 Generate shareable trip link
+        responses:
+          201:
+            body:
+              application/json:
+                type:
+                  properties:
+                    shareUrl: string
+
+    /shared-view:
+      get:
+        description: UC-12 Public no-auth shared trip view
+        responses:
+          200:
+            body:
+              application/json:
+
+    /cancel:
+      patch:
+        description: UC-9 Cancel a ride
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+/users:
+  /{id}:
+    /profile:
+      get:
+        description: UC-17 Retrieve user profile
+        responses:
+          200:
+            body:
+              application/json:
+                type: users.user
+                example: !include examples/user/user-get.json
+      patch:
+        description: UC-17 Update user profile and sync to Okta and Square
+        body:
+          application/json:
+            type: users.user
+            example: !include examples/user/user-put.json
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.apiResponse
+    /rides:
+      get:
+        description: UC-15 Paginated ride history
+        queryParameters:
+          page:
+            type: integer
+            required: false
+            default: 1
+          size:
+            type: integer
+            required: false
+            default: 20
+        responses:
+          200:
+            body:
+              application/json:
+                type: rides.ride[]
+                example: !include examples/rides/rides-get.json
+
+/auth:
+  /login:
+    post:
+      description: UC-6 Authenticate user via Okta credentials
+      body:
+        application/json:
+          type:
+            properties:
+              email: string
+              password: string
+      responses:
+        200:
+          body:
+            application/json:
+              type:
+                properties:
+                  accessToken: string
+                  refreshToken: string
+        401:
+          body:
+            application/json:
+              type: commons.apiResponse
+  /token:
+    /refresh:
+      post:
+        description: UC-6 Refresh Okta access token
+        body:
+          application/json:
+            type:
+              properties:
+                refreshToken: string
+        responses:
+          200:
+            body:
+              application/json:
+                type:
+                  properties:
+                    accessToken: string
+  /reset-password:
+    post:
+      description: UC-6 Trigger Okta password reset email
+      body:
+        application/json:
+          type:
+            properties:
+              email: string
+      responses:
+        200:
+          body:
+            application/json:
+              type: commons.apiResponse
+
+/drivers:
+  /{id}:
+    /status:
+      patch:
+        description: UC-8 Driver go online or offline
+        body:
+          application/json:
+            type:
+              properties:
+                status:
+                  enum: [online, offline]
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.apiResponse
+    /location:
+      post:
+        description: UC-8 UC-12 Driver broadcasts GPS location
+        body:
+          application/json:
+            type: commons.location
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.apiResponse
+    /vehicle:
+      post:
+        description: UC-7 Driver vehicle registration
+        body:
+          application/json:
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+    /documents:
+      post:
+        description: UC-7 Driver license and insurance upload
+        body:
+          multipart/form-data:
+            properties:
+              documentType:
+                enum: ["Driver License", "Proof of insurance", "Vehicle registration"]
+                required: true
+              fileName:
+                type: string
+                required: true
+              file:
+                required: true
+                type: file
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+    /banking:
+      post:
+        description: UC-7 Driver banking info
+        body:
+          application/json:
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+/support:
+  /tickets:
+    post:
+      description: UC-16 Create support ticket in Salesforce
+      body:
+        application/json:
+          type:
+            properties:
+              subject: string
+              description: string
+              priority:
+                enum: [Low, Medium, High]
+      responses:
+        201:
+          body:
+            application/json:
+              type: commons.apiResponse
 
 /geolocations:
   is:

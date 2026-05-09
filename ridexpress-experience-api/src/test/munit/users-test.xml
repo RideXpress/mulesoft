@@ -11,13 +11,20 @@
 
     <munit:config name="users-test" />
 
-    <munit:test name="post-user-test" description="Test POST /user flow executes without error">
+    <munit:test name="post-user-test" description="Test POST /user flow - mocks user-sign-up-process-api and returns 201">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-				<munit:payload value="#[{}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock user-sign-up-process-api POST /signup" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "User created successfully"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"name": "Felipe Ocadiz", "email": "felipe@ridexpress.io", "password": "Test1234!"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {'X-Transaction-Id': 'test-txn-001'}}]" />
+            </munit:set-event>
             <flow-ref name="post:\user:router" doc:name="Call post:\user:router" />
         </munit:execution>
         <munit:validation>
@@ -27,13 +34,14 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-user-test" description="Test GET /user flow - mocks DB select and returns user data">
+    <munit:test name="get-user-test" description="Test GET /user flow - mocks database-system-api GET /users/{id} and returns user data">
         <munit:behavior>
-            <munit-tools:mock-when doc:name="Mock DB Select User" processor="db:select">
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /users/{id}" processor="http:request">
                 <munit-tools:then-return>
                     <munit-tools:payload
-                        value="#[[{user_id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3', name: 'Felipe Ocadiz', email: 'felipe@ridexpress.io', role: 'DRIVER', created_at: '2024-01-01', updated_at: '2024-01-01'}]]"
-                        mediaType="application/java" />
+                        value='#[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "name": "Felipe Ocadiz", "email": "felipe@ridexpress.io", "role": "DRIVER", "created_at": "2024-01-01", "updated_at": "2024-01-01"}]'
+                        mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
@@ -48,13 +56,20 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="put-user-test" description="Test PUT /user flow executes without error">
+    <munit:test name="put-user-test" description="Test PUT /user flow - mocks database-system-api PATCH /users/{id}">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-				<munit:payload value="#[{}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock database-system-api PATCH /users/{id}" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "User updated"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"name": "Felipe Ocadiz Updated"}]' mediaType="application/json" />
+            </munit:set-event>
+            <set-variable variableName="id" value="e58ed763-928c-4155-bee9-fdbaaadc15f3" />
             <flow-ref name="put:\user:router" doc:name="Call put:\user:router" />
         </munit:execution>
         <munit:validation>
@@ -64,13 +79,17 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="delete-user-test" description="Test DELETE /user flow executes without error">
+    <munit:test name="delete-user-test" description="Test DELETE /user flow - mocks database-system-api PATCH /users/{id} for deactivation">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-				<munit:payload value="#[{}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock database-system-api PATCH /users/{id} deactivate" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "User deactivated"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <set-variable variableName="id" value="e58ed763-928c-4155-bee9-fdbaaadc15f3" />
             <flow-ref name="delete:\user:router" doc:name="Call delete:\user:router" />
         </munit:execution>
         <munit:validation>
@@ -80,8 +99,17 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-user-vehicles-test" description="Test GET /user/vehicles flow executes without error">
+    <munit:test name="get-user-vehicles-test" description="Test GET /user/vehicles flow - mocks database-system-api GET /users/{id}/vehicles">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /users/{id}/vehicles" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[[{"vehicle_id": "v1", "make": "Toyota", "model": "Camry", "year": 2020}]]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
+            <set-variable variableName="id" value="e58ed763-928c-4155-bee9-fdbaaadc15f3" />
             <flow-ref name="get:\user\vehicles:router" doc:name="Call get:\user\vehicles:router" />
         </munit:execution>
         <munit:validation>
@@ -93,12 +121,18 @@
 
     <munit:test name="put-user-vehicles-id-test" description="Test PUT /user/vehicles/{id} flow - verifies id variable is set from URI params">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-                <munit:payload value="#[{}]" />
-				<munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock database-system-api PUT /users/{id}/vehicles/{id}" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "Vehicle updated"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value="#[{}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
             <flow-ref name="put:\user\vehicles\(id):router" doc:name="Call put:\user\vehicles\(id):router" />
         </munit:execution>
         <munit:validation>
@@ -108,13 +142,21 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="post-user-geolocation-test" description="Test POST /user/geolocation flow executes without error">
+    <munit:test name="post-user-geolocation-test" description="Test POST /user/geolocation flow - mocks database-system-api POST /users/{id}/location">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-				<munit:payload value='#[{"long": 123456, "lat": 523543425}]' />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock database-system-api POST /users/{id}/location" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "Location updated"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"long": 123456, "lat": 523543425}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}}]" />
+            </munit:set-event>
+            <set-variable variableName="id" value="e58ed763-928c-4155-bee9-fdbaaadc15f3" />
             <flow-ref name="post:\user\geolocation:router" doc:name="Call post:\user\geolocation:router" />
         </munit:execution>
         <munit:validation>
@@ -124,20 +166,22 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="post-user-attachments-test" description="Test POST /user/attachments flow executes without error">
-        <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-				<munit:payload value="#[{}]" />
-            </munit:set-event>
-        </munit:behavior>
+    <munit:test name="post-user-attachments-test" description="Test POST /user/attachments flow - returns 501 not implemented">
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value="#[{}]" />
+            </munit:set-event>
             <flow-ref name="post:\user\attachments:router" doc:name="Call post:\user\attachments:router" />
         </munit:execution>
         <munit:validation>
             <munit-tools:assert-that doc:name="Assert payload not null"
                 expression="#[payload]"
                 is="#[MunitTools::notNullValue()]" />
+            <munit-tools:assert-that doc:name="Assert httpStatus is 501"
+                expression="#[vars.httpStatus]"
+                is="#[MunitTools::equalTo(501)]" />
         </munit:validation>
     </munit:test>
 
 </mule>
+

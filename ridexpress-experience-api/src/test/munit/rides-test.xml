@@ -11,17 +11,21 @@
 
     <munit:config name="rides-test" />
 
-    <munit:test name="get-rides-test" description="Test GET /rides flow - mocks DB select and returns rides list">
+    <munit:test name="get-rides-test" description="Test GET /rides flow - mocks database-system-api GET /rides and returns rides list">
         <munit:behavior>
-            <munit-tools:mock-when doc:name="Mock DB Select Rides" processor="db:select">
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides" processor="http:request">
                 <munit-tools:then-return>
                     <munit-tools:payload
-                        value="#[[{ride_id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20', user_id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3', driver_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', status: 'NEW', start_location: '123456,523543425', end_location: '1321,235352', created_at: '2024-01-01', updated_at: '2024-01-01'}]]"
-                        mediaType="application/java" />
+                        value='#[[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "driver_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "status": "NEW", "start_location": "123456,523543425", "end_location": "1321,235352", "created_at": "2024-01-01", "updated_at": "2024-01-01"}]]'
+                        mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+            </munit:set-event>
             <flow-ref name="get:\rides:router" doc:name="Call get:\rides:router" />
         </munit:execution>
         <munit:validation>
@@ -31,15 +35,19 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="post-rides-test" description="Test POST /rides flow - mocks AMQP publish">
+    <munit:test name="post-rides-test" description="Test POST /rides flow - mocks request-ride-process-api POST /rides">
         <munit:behavior>
-            <munit-tools:mock-when doc:name="Mock AMQP Publish" processor="amqp:publish">
-                <munit-tools:then-return />
+            <munit-tools:mock-when doc:name="Mock request-ride-process-api POST /rides" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "NEW"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201, headers: {}}]" />
+                </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Request Payload">
-                <munit:payload value='#[{"pickupLocation": "123456,523543425", "destination": "1321,235352", "destinationName": "Cumaica Artesanos del Cafe"}]' />
+                <munit:payload value='#[{"pickupLocation": "123456,523543425", "destination": "1321,235352", "destinationName": "Cumaica Artesanos del Cafe"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}}]" />
             </munit:set-event>
             <flow-ref name="post:\rides:router" doc:name="Call post:\rides:router" />
         </munit:execution>
@@ -50,10 +58,41 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-test" description="Test GET /rides/{id} flow - verifies id variable is set from URI params">
+    <munit:test name="post-rides-estimate-test" description="Test POST /rides/estimate flow - mocks request-ride-process-api POST /pricing/calculate">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock request-ride-process-api POST /pricing/calculate" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"estimatedFare": 15.50, "estimatedDuration": 20, "rideType": "STANDARD"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Request Payload">
+                <munit:payload value='#[{"pickupLocation": "123456,523543425", "destination": "1321,235352", "rideType": "STANDARD"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="post:\rides\estimate:router" doc:name="Call post:\rides\estimate:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-test" description="Test GET /rides/{id} flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id}" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "NEW"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id):router" doc:name="Call get:\rides\(id):router" />
         </munit:execution>
@@ -64,10 +103,145 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-passenger-test" description="Test GET /rides/{id}/passenger flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-details-test" description="Test GET /rides/{id}/details flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id}" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "NEW"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\details:router" doc:name="Call get:\rides\(id)\details:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-receipt-test" description="Test GET /rides/{id}/receipt flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id} for receipt" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "total": 15.50}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\receipt:router" doc:name="Call get:\rides\(id)\receipt:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-live-location-test" description="Test GET /rides/{id}/live-location flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET driver location" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"lat": 9.9341, "long": -84.0877}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\live-location:router" doc:name="Call get:\rides\(id)\live-location:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-rides-id-share-test" description="Test POST /rides/{id}/share flow - verifies shareUrl in response">
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="post:\rides\(id)\share:router" doc:name="Call post:\rides\(id)\share:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+            <munit-tools:assert-that doc:name="Assert shareUrl present"
+                expression="#[payload.shareUrl]"
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-shared-view-test" description="Test GET /rides/{id}/shared-view flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id} for shared view" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "IN_PROGRESS"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\rides\(id)\shared-view:router" doc:name="Call get:\rides\(id)\shared-view:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="patch-rides-id-cancel-test" description="Test PATCH /rides/{id}/cancel flow - mocks cancel-ride-process-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock cancel-ride-process-api PATCH /rides/{id}/cancel" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "Ride cancelled"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="patch:\rides\(id)\cancel:router" doc:name="Call patch:\rides\(id)\cancel:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('44e128a5-ac7a-4c9a-be4c-224b6bf81b20')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-rides-id-passenger-test" description="Test GET /rides/{id}/passenger flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id}/passenger" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "name": "John Doe"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\passenger:router" doc:name="Call get:\rides\(id)\passenger:router" />
         </munit:execution>
@@ -78,10 +252,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-passenger-location-test" description="Test GET /rides/{id}/passenger/location flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-passenger-location-test" description="Test GET /rides/{id}/passenger/location flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET passenger location" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"lat": 9.9341, "long": -84.0877}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\passenger\location:router" doc:name="Call get:\rides\(id)\passenger\location:router" />
         </munit:execution>
@@ -92,10 +274,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-driver-test" description="Test GET /rides/{id}/driver flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-driver-test" description="Test GET /rides/{id}/driver flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id}/driver" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "name": "Driver Name"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\driver:router" doc:name="Call get:\rides\(id)\driver:router" />
         </munit:execution>
@@ -106,10 +296,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-driver-location-test" description="Test GET /rides/{id}/driver/location flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-driver-location-test" description="Test GET /rides/{id}/driver/location flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET driver location" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"lat": 9.9341, "long": -84.0877}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\driver\location:router" doc:name="Call get:\rides\(id)\driver\location:router" />
         </munit:execution>
@@ -120,10 +318,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-payment-test" description="Test GET /rides/{id}/payment flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-payment-test" description="Test GET /rides/{id}/payment flow - mocks square API and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock square GET payment" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"status": "COMPLETED", "amount": 15.50}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\payment:router" doc:name="Call get:\rides\(id)\payment:router" />
         </munit:execution>
@@ -134,10 +340,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-route-test" description="Test GET /rides/{id}/route flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-route-test" description="Test GET /rides/{id}/route flow - mocks Google Maps API and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock Google Maps GET directions" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"routes": []}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\route:router" doc:name="Call get:\rides\(id)\route:router" />
         </munit:execution>
@@ -148,7 +362,7 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="post-rides-id-feedback-test" description="Test POST /rides/{id}/feedback flow - mocks AMQP publish">
+    <munit:test name="post-rides-id-feedback-test" description="Test POST /rides/{id}/feedback flow - mocks AMQP publish and verifies id variable">
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock AMQP Publish" processor="amqp:publish">
                 <munit-tools:then-return />
@@ -157,7 +371,7 @@
         <munit:execution>
             <munit:set-event doc:name="Set Event">
                 <munit:payload value='#[{"rating": "5"}]' mediaType="application/json" />
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="post:\rides\(id)\feedback:router" doc:name="Call post:\rides\(id)\feedback:router" />
         </munit:execution>
@@ -168,10 +382,18 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-status-test" description="Test GET /rides/{id}/status flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-status-test" description="Test GET /rides/{id}/status flow - mocks database-system-api and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id} for status" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"status": "NEW", "arrivalTime": 5}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="get:\rides\(id)\status:router" doc:name="Call get:\rides\(id)\status:router" />
         </munit:execution>
@@ -182,15 +404,20 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="put-rides-id-status-test" description="Test PUT /rides/{id}/status flow - verifies id variable is set from URI params">
+    <munit:test name="put-rides-id-status-test" description="Test PUT /rides/{id}/status flow - mocks database-system-api and verifies id variable">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-                <munit:payload value='#[{"status": "CANCELED_FOR_REFUND"}]' mediaType="application/json" />
-                <munit:attributes
-                    value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock database-system-api PATCH /rides/{id} for status update" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "Status updated"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"status": "CANCELED_FOR_REFUND"}]' mediaType="application/json" />
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
             <flow-ref name="put:\rides\(id)\status:router" doc:name="Call put:\rides\(id)\status:router" />
         </munit:execution>
         <munit:validation>
@@ -200,14 +427,19 @@
         </munit:validation>
     </munit:test>
 
-    <munit:test name="get-rides-id-summary-test" description="Test GET /rides/{id}/summary flow - verifies id variable is set from URI params">
+    <munit:test name="get-rides-id-summary-test" description="Test GET /rides/{id}/summary flow - mocks database-system-api and verifies id variable">
         <munit:behavior>
-            <munit:set-event doc:name="Set Event">
-                <munit:attributes
-                    value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}}]" />
-            </munit:set-event>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id} for summary" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "FINISHED"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
+            </munit:set-event>
             <flow-ref name="get:\rides\(id)\summary:router" doc:name="Call get:\rides\(id)\summary:router" />
         </munit:execution>
         <munit:validation>
