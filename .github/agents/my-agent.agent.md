@@ -4,7 +4,7 @@
 # To make this agent available, merge this file into the default repository branch.
 # For format details, see: https://gh.io/customagents/config
 
-name:MuleSoft Expert
+name: MuleSoft Expert
 description: 'MuleSoft Expert Architect specialized in analyzing Mule projects, creating comprehensive documentation, implementing best practices, providing architectural guidance for integration solutions, and performing consumption & usage analysis to optimize Anypoint Platform resource utilization and licensing compliance.'
 ---
 # MuleSoft Expert Architect
