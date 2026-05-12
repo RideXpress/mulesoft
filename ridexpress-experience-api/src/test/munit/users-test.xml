@@ -15,7 +15,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock user-sign-up-process-api POST /signup" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"message": "User created successfully"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"message": "User created successfully"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -39,7 +39,7 @@
             <munit-tools:mock-when doc:name="Mock database-system-api GET /users/{id}" processor="http:request">
                 <munit-tools:then-return>
                     <munit-tools:payload
-                        value='#[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "name": "Felipe Ocadiz", "email": "felipe@ridexpress.io", "role": "DRIVER", "created_at": "2024-01-01", "updated_at": "2024-01-01"}]'
+                        value='#[write({"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "name": "Felipe Ocadiz", "email": "felipe@ridexpress.io", "role": "DRIVER", "created_at": "2024-01-01", "updated_at": "2024-01-01"}, "application/json")]'
                         mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
@@ -60,7 +60,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock database-system-api PATCH /users/{id}" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"message": "User updated"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"message": "User updated"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -83,7 +83,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock database-system-api PATCH /users/{id} deactivate" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"message": "User deactivated"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"message": "User deactivated"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -103,7 +103,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock database-system-api GET /users/{id}/vehicles" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[[{"vehicle_id": "v1", "make": "Toyota", "model": "Camry", "year": 2020}]]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write([{"vehicle_id": "v1", "make": "Toyota", "model": "Camry", "year": 2020}], "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -123,7 +123,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock database-system-api PUT /users/{id}/vehicles/{id}" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"message": "Vehicle updated"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"message": "Vehicle updated"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -146,7 +146,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock database-system-api POST /users/{id}/location" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"message": "Location updated"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"message": "Location updated"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
