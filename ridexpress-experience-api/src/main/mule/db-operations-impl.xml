@@ -1,0 +1,14 @@
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd     http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <!-- Refactored: these sub-flows now call database-system-api via HTTP
+         instead of querying PostgreSQL directly (per API-led connectivity best practices) -->
+
+    <sub-flow name="get-rides-impl">
+        <http:request config-ref="database-system-api" method="GET" path="/rides" doc:name="Call database-system-api GET /rides" />
+    </sub-flow>
+
+    <sub-flow name="get-user-by-id-impl">
+        <http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}" />
+    </sub-flow>
+
+</mule>

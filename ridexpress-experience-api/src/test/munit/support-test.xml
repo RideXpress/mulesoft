@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="support-test" />
+
+    <munit:test name="post-support-tickets-test" description="Test POST /support/tickets flow - mocks salesforce-system-api POST /cases and returns 201">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock salesforce-system-api POST /cases" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[write({"message": "Support ticket created", "caseId": "CASE-001"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"subject": "Trip issue", "description": "My driver was rude", "priority": "Medium"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="post:\support\tickets:router" doc:name="Call post:\support\tickets:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert payload not null"
+                expression="#[payload]"
+                is="#[MunitTools::notNullValue()]" />
+            <munit-tools:assert-that doc:name="Assert httpStatus is 201"
+                expression="#[vars.httpStatus]"
+                is="#[MunitTools::equalTo(201)]" />
+        </munit:validation>
+    </munit:test>
+
+</mule>

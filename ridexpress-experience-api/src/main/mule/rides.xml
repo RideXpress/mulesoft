@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
+
+	<flow name="get:\rides:router">
+		<logger level="INFO" message="get:\rides:router - Getting rides list" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="/rides" doc:name="Call database-system-api GET /rides">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+			<http:query-params><![CDATA[#[{from: attributes.queryParams.from, to: attributes.queryParams.to} filterObject ((value) -> value != null)]]]></http:query-params>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="post:\rides:router">
+		<logger level="INFO" message="post:\rides:router - Requesting ride" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="request-ride-process-api" method="POST" path="/rides" doc:name="Call request-ride-process-api POST /rides">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Set 201 status">
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="HTTP:BAD_REQUEST" doc:name="Handle 400">
+				<ee:transform doc:name="Set 400 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request: " ++ (error.description default "invalid input")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">400</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - request ride process API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="post:\rides\estimate:router">
+		<logger level="INFO" message="post:\rides\estimate:router - Calculating fare estimate" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="request-ride-process-api" method="POST" path="/pricing/calculate" doc:name="Call request-ride-process-api POST /pricing/calculate">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:BAD_REQUEST" doc:name="Handle 400">
+				<ee:transform doc:name="Set 400 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request: " ++ (error.description default "invalid input")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">400</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - request ride process API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id):router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id):router - Getting ride by ID" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\details:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\details:router - Getting ride details" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\receipt:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\receipt:router - Getting ride receipt" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\live-location:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\live-location:router - Getting live driver location" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/driver/location']" doc:name="Call database-system-api GET driver location">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride or driver location not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="post:\rides\(id)\share:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="post:\rides\(id)\share:router - Generating shareable trip link" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<ee:transform doc:name="Build share link response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{shareUrl: "https://ridexpress.io/share/" ++ vars.id}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+
+	<flow name="get:\rides\(id)\shared-view:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\shared-view:router - Getting shared ride view" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id} for shared view">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="patch:\rides\(id)\cancel:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="patch:\rides\(id)\cancel:router - Cancelling ride" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="cancel-ride-process-api" method="PATCH" path="#['/rides/' ++ vars.id ++ '/cancel']" doc:name="Call cancel-ride-process-api PATCH /rides/{id}/cancel">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - cancel ride process API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\passenger:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\passenger:router - Getting passenger info" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/passenger']" doc:name="Call database-system-api GET /rides/{id}/passenger">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride or passenger not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\passenger\location:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\passenger\location:router - Getting passenger location" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/passenger/location']" doc:name="Call database-system-api GET passenger location">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Passenger location not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\driver:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\driver:router - Getting driver info" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/driver']" doc:name="Call database-system-api GET /rides/{id}/driver">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride or driver not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\driver\location:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\driver\location:router - Getting driver location" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/driver/location']" doc:name="Call database-system-api GET driver location">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver location not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\payment:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\payment:router - Getting payment info" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="square" method="GET" path="#['/payments/' ++ vars.id]" doc:name="Call square-system-api GET payment">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payment not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - square API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\route:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\route:router - Getting ride route" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="google-maps" method="GET" path="/directions/json" doc:name="Call google-maps GET directions">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+			<http:query-params><![CDATA[#[{key: p('googlemaps.key')}]]]></http:query-params>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - Google Maps API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="post:\rides\(id)\feedback:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="post:\rides\(id)\feedback:router - Submitting ride feedback" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<ee:transform doc:name="Build feedback payload">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ {rideId: vars.id}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<amqp:publish doc:name="Publish feedback to RabbitMQ" config-ref="rabbitmq" exchangeName="feedback" />
+		<ee:transform doc:name="Set 201 status">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Feedback submitted successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="AMQP:CONNECTIVITY" doc:name="Handle AMQP connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - messaging system unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\status:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\status:router - Getting ride status" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Extract status from response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: payload.status,
+  arrivalTime: payload.arrivalTime default null
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="put:\rides\(id)\status:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="put:\rides\(id)\status:router - Updating ride status" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="PATCH" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api PATCH /rides/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<flow name="get:\rides\(id)\summary:router">
+		<ee:transform doc:name="Extract URI params">
+			<ee:variables>
+				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" message="get:\rides\(id)\summary:router - Getting ride summary" />
+		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+		</http:request>
+		<error-handler>
+			<on-error-propagate type="HTTP:NOT_FOUND" doc:name="Handle 404">
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="HTTP:CONNECTIVITY" doc:name="Handle connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Service unavailable - database system API unreachable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

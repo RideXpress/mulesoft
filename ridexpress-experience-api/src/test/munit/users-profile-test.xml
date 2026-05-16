@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="users-profile-test" />
+
+    <munit:test name="get-users-id-profile-test" description="Test GET /users/{id}/profile flow - mocks database-system-api GET /users/{id} and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /users/{id}" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "name": "Felipe Ocadiz", "email": "felipe@ridexpress.io", "role": "DRIVER"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\users\(id)\profile:router" doc:name="Call get:\users\(id)\profile:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('e58ed763-928c-4155-bee9-fdbaaadc15f3')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="patch-users-id-profile-test" description="Test PATCH /users/{id}/profile flow - mocks database-system-api PATCH /users/{id} and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api PATCH /users/{id}" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[{"message": "Profile updated"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:payload value='#[{"name": "Felipe Ocadiz Updated"}]' mediaType="application/json" />
+                <munit:attributes value="#[{uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}, headers: {}}]" />
+            </munit:set-event>
+            <flow-ref name="patch:\users\(id)\profile:router" doc:name="Call patch:\users\(id)\profile:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('e58ed763-928c-4155-bee9-fdbaaadc15f3')]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-users-id-rides-test" description="Test GET /users/{id}/rides flow - mocks database-system-api GET /users/{id}/rides and verifies id variable">
+        <munit:behavior>
+            <munit-tools:mock-when doc:name="Mock database-system-api GET /users/{id}/rides" processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "FINISHED"}]]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event doc:name="Set Event">
+                <munit:attributes value="#[{uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}, headers: {}, queryParams: {page: 1, size: 20}}]" />
+            </munit:set-event>
+            <flow-ref name="get:\users\(id)\rides:router" doc:name="Call get:\users\(id)\rides:router" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that doc:name="Assert id variable is set"
+                expression="#[vars.id]"
+                is="#[MunitTools::equalTo('e58ed763-928c-4155-bee9-fdbaaadc15f3')]" />
+        </munit:validation>
+    </munit:test>
+
+</mule>

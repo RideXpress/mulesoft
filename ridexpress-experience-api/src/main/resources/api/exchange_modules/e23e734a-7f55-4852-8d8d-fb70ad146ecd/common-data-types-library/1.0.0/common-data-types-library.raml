@@ -1,0 +1,92 @@
+#%RAML 1.0 Library
+usage:
+
+types:
+  apiResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        required: true
+        example: "focadiz already exists, pick a new username"
+
+  userType:
+    enum:
+      - DRIVER
+      - PASSENGER
+
+  emailType:
+    type: string
+    pattern: ^.+@.+\..+$
+    example: "felipe@ridexpress.io"
+
+  idType:
+    type: string
+    pattern:  ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+    example: "e58ed763-928c-4155-bee9-fdbaaadc15f3"
+  
+  vehicle: 
+    type: object
+    properties:
+      id:
+        type: idType
+        required: false
+        description: unique Id of the car, using a UUID type
+      make:
+        type: string
+        required: true
+        description: name of the car brand
+      model:
+        type: string
+        required: true
+        description: model of the car
+      year: 
+        type: integer
+        required: true
+        description: year when the car was built
+      licensePlate:
+        type: string
+        required: true
+        description: License plate of the car
+      insurancePolicy:
+        type: string
+        required: true
+        description: insurance policy identificator
+      lastModifiedDate: 
+        type: datetime
+        required: false
+        description: modification date of the car in the RideXPress system      
+      createdDate: 
+        type: datetime
+        required: false
+        description: creation date of the car in the RideXPress system      
+  
+  location:
+    type: object
+    properties:
+      long: 
+       type: number
+       example: 123456
+      lat:
+        type: number
+        example: 123456
+
+  driverLocation:
+    type: location
+    properties:
+      arrivalTime: number
+
+  paymentStatus:
+    enum:
+      - HOLD
+      - PAID
+      - REJECTED
+      - REFUND
+  
+  ratingType:
+    enum:
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
