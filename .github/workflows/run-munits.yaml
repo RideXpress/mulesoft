@@ -38,6 +38,8 @@ jobs:
         env:
           ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mkdir -p ~/.m2
           cat > ~/.m2/settings.xml << EOSETTINGS
@@ -54,14 +56,14 @@ jobs:
               </server>
               <server>
                 <id>mulesoft-releases</id>
-                <username>~~~Client~~~</username>
-                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
               </server>
               <!-- Required for MUnit EE runtime BOM resolution -->
               <server>
                 <id>mulesoft-enterprise-repository</id>
-                <username>~~~Client~~~</username>
-                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
               </server>
             </servers>
           </settings>
