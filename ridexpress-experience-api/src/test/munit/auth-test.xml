@@ -15,7 +15,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock user-sign-up-process-api POST /auth/authenticate" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"accessToken": "test-access-token", "refreshToken": "test-refresh-token"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"accessToken": "test-access-token", "refreshToken": "test-refresh-token"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -38,7 +38,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock user-sign-up-process-api POST /auth/token/refresh" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"accessToken": "new-access-token"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"accessToken": "new-access-token"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -61,7 +61,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock user-sign-up-process-api POST /auth/reset-password" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[{"message": "Reset email sent"}]' mediaType="application/json" />
+                    <munit-tools:payload value='#[write({"message": "Reset email sent"}, "application/json")]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
