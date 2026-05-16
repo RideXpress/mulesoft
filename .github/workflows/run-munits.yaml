@@ -3,7 +3,7 @@ run-name: MUnit Tests run by ${{ github.actor }}
 on:
   push:
     branches:
-      - 'copilot/**'
+      - '**'
 permissions:
   contents: read
 
