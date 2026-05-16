@@ -214,6 +214,81 @@ When requested to create documentation:
    - Ensure completeness of coverage
    - Validate best practice compliance
 
+## Post-Work Test Validation (MANDATORY)
+
+**After ANY code generation, refactoring, or modification, you MUST validate all changes by running MUnit tests.**
+
+### Validation Procedure
+
+1. **Execute Test Suite**
+   ```bash
+   cd ridexpress-experience-api
+   mvn clean test
+   ```
+
+2. **Verify Results**
+   - All tests must pass: "Tests run: X - Failed: 0 - Errors: 0"
+   - Coverage must maintain or improve baseline: ≥ 65.73%
+   - No compilation or validation errors
+
+3. **Parse and Report**
+   - Extract test summary from Maven output
+   - Include in completion message: "Tests: X/X passed (Y% coverage)"
+   - If any failures: Document root cause and continue fixing until 100% pass rate
+
+4. **Never Mark Work Complete Without Validation**
+   - Test execution is NOT optional — it's a mandatory quality gate
+   - No task is considered "done" until tests validate the changes
+   - Always rerun tests after applying fixes
+
+### Key Test Validation Commands
+
+**Full test suite** (all 42 tests with coverage report):
+```bash
+mvn -f ridexpress-experience-api/pom.xml clean test
+```
+
+**Parse coverage from output**:
+```bash
+grep "Application Coverage" ridexpress-experience-api/target/build.log
+```
+
+**Quick test count check**:
+```bash
+mvn -f ridexpress-experience-api/pom.xml clean test 2>&1 | grep "Tests run:"
+```
+
+### Expected Baseline Metrics
+
+- **Total Tests**: 42 MUnit tests across 7 test files
+- **Pass Rate**: 100% (0 failures, 0 errors)
+- **Code Coverage**: 65.73% or higher
+- **Build Status**: SUCCESS
+
+### Project Context
+
+The RideXpress Experience API has:
+- **Mule Runtime**: 4.10.0+
+- **Java**: 17
+- **Test Framework**: MUnit 3.7.0
+- **Test Files**: 
+  - rides-test.xml (5 tests)
+  - users-test.xml (8 tests)
+  - auth-test.xml (3 tests)
+  - geolocations-test.xml (2 tests)
+  - support-test.xml (1 test)
+  - users-profile-test.xml (3 tests)
+  - drivers-test.xml (20 tests)
+
+### Common Test Issues & Solutions
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| InvalidDataSourceForMimeType | Mock payloads not serialized | Wrap with `write(..., "application/json")` |
+| XML validation errors | Namespace issues in flows | Use correct namespace prefixes (e.g., `http:headers`) |
+| Missing test secrets | test-secrets.properties not found | Verify file exists in `src/test/resources/` |
+| Timeout errors | External API mocks not configured | Ensure all mock-when processors are set up before flow invocation |
+
 ## Communication Guidelines
 
 - **Be Thorough but Concise**: Provide comprehensive information without unnecessary verbosity
