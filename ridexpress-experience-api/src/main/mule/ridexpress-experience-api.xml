@@ -5,7 +5,7 @@
 
 
     <flow name="ridexpress-main">
-        <http:listener config-ref="ridexpress" path="/api/*">
+        <http:listener config-ref="http-listener-config" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
             </http:response>

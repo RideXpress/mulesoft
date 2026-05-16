@@ -14,9 +14,9 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="patch:\drivers\(id)\status:router - Updating driver status" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'patch:\drivers\(id)\status:router - Updating driver status', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="driver-availability-process-api" method="PATCH" path="#['/drivers/' ++ vars.id ++ '/status']" doc:name="Call driver-availability-process-api PATCH /drivers/{id}/status">
+		<http:request config-ref="http-request-driver-availability-process-api-config" method="PATCH" path="#['/drivers/' ++ vars.id ++ '/status']" doc:name="Call driver-availability-process-api PATCH /drivers/{id}/status">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -55,9 +55,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="post:\drivers\(id)\location:router - Broadcasting driver location" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\drivers\(id)\location:router - Broadcasting driver location', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="POST" path="#['/users/' ++ vars.id ++ '/location']" doc:name="Call database-system-api POST /users/{id}/location">
+		<http:request config-ref="http-request-database-system-api-config" method="POST" path="#['/users/' ++ vars.id ++ '/location']" doc:name="Call database-system-api POST /users/{id}/location">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -96,9 +96,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="post:\drivers\(id)\vehicle:router - Registering driver vehicle" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\drivers\(id)\vehicle:router - Registering driver vehicle', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="user-sign-up-process-api" method="POST" path="#['/drivers/' ++ vars.id ++ '/vehicle']" doc:name="Call user-sign-up-process-api POST /drivers/{id}/vehicle">
+		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="#['/drivers/' ++ vars.id ++ '/vehicle']" doc:name="Call user-sign-up-process-api POST /drivers/{id}/vehicle">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 201 status">
@@ -142,9 +142,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="post:\drivers\(id)\documents:router - Uploading driver documents" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\drivers\(id)\documents:router - Uploading driver documents', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="user-sign-up-process-api" method="POST" path="#['/drivers/' ++ vars.id ++ '/documents']" doc:name="Call user-sign-up-process-api POST /drivers/{id}/documents">
+		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="#['/drivers/' ++ vars.id ++ '/documents']" doc:name="Call user-sign-up-process-api POST /drivers/{id}/documents">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 201 status">
@@ -188,9 +188,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="post:\drivers\(id)\banking:router - Registering driver banking info" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\drivers\(id)\banking:router - Registering driver banking info', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="user-sign-up-process-api" method="POST" path="#['/drivers/' ++ vars.id ++ '/banking']" doc:name="Call user-sign-up-process-api POST /drivers/{id}/banking">
+		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="#['/drivers/' ++ vars.id ++ '/banking']" doc:name="Call user-sign-up-process-api POST /drivers/{id}/banking">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 201 status">

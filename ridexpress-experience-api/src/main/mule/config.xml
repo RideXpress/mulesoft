@@ -9,38 +9,38 @@
 						http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
 
-	<http:listener-config name="ridexpress">
+	<http:listener-config name="http-listener-config">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
     <apikit:config name="router" api="api/ridexpress-experience-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-	<http:request-config name="google-maps" doc:name="HTTP Request configuration" doc:id="1f06e185-89ae-4000-9b3f-58ad57727d6b" basePath="/maps/api">
+	<http:request-config name="http-request-google-maps-config" doc:name="Google Maps System API" doc:id="1f06e185-89ae-4000-9b3f-58ad57727d6b" basePath="/maps/api">
 		<http:request-connection host="${googlemaps.hostname}" port="${googlemaps.port}" protocol="HTTPS" />
 	</http:request-config>
-	<http:request-config name="okta" doc:name="HTTP Request configuration" doc:id="1d47e8c8-7e57-42da-b194-e30faeae752b" basePath="/api/v1">
+	<http:request-config name="http-request-okta-config" doc:name="Okta System API" doc:id="1d47e8c8-7e57-42da-b194-e30faeae752b" basePath="/api/v1">
 		<http:request-connection host="${okta.hostname}" port="${okta.port}" protocol="HTTPS" />
 	</http:request-config>
-	<http:request-config name="square" doc:name="HTTP Request configuration" doc:id="0cad353e-f9fa-4595-bebc-7edc7eb518d8" basePath="/v2">
+	<http:request-config name="http-request-square-config" doc:name="Square System API" doc:id="0cad353e-f9fa-4595-bebc-7edc7eb518d8" basePath="/v2">
 		<http:request-connection host="${square.hostname}" port="${square.port}" protocol="HTTPS" />
 	</http:request-config>
-	<http:request-config name="database-system-api" doc:name="Database System API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567891" basePath="/api">
+	<http:request-config name="http-request-database-system-api-config" doc:name="Database System API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567891" basePath="/api">
 		<http:request-connection host="${database-system-api.hostname}" port="${database-system-api.port}" />
 	</http:request-config>
-	<http:request-config name="user-sign-up-process-api" doc:name="User Sign Up Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567892" basePath="/api">
+	<http:request-config name="http-request-user-sign-up-process-api-config" doc:name="User Sign Up Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567892" basePath="/api">
 		<http:request-connection host="${user-sign-up-process-api.hostname}" port="${user-sign-up-process-api.port}" />
 	</http:request-config>
-	<http:request-config name="request-ride-process-api" doc:name="Request Ride Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567893" basePath="/api">
+	<http:request-config name="http-request-request-ride-process-api-config" doc:name="Request Ride Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567893" basePath="/api">
 		<http:request-connection host="${request-ride-process-api.hostname}" port="${request-ride-process-api.port}" />
 	</http:request-config>
-	<http:request-config name="cancel-ride-process-api" doc:name="Cancel Ride Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567894" basePath="/api">
+	<http:request-config name="http-request-cancel-ride-process-api-config" doc:name="Cancel Ride Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567894" basePath="/api">
 		<http:request-connection host="${cancel-ride-process-api.hostname}" port="${cancel-ride-process-api.port}" />
 	</http:request-config>
-	<http:request-config name="driver-availability-process-api" doc:name="Driver Availability Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567895" basePath="/api">
+	<http:request-config name="http-request-driver-availability-process-api-config" doc:name="Driver Availability Process API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567895" basePath="/api">
 		<http:request-connection host="${driver-availability-process-api.hostname}" port="${driver-availability-process-api.port}" />
 	</http:request-config>
-	<http:request-config name="salesforce-system-api" doc:name="Salesforce System API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567896" basePath="/api">
+	<http:request-config name="http-request-salesforce-system-api-config" doc:name="Salesforce System API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567896" basePath="/api">
 		<http:request-connection host="${salesforce-system-api.hostname}" port="${salesforce-system-api.port}" />
 	</http:request-config>
-	<amqp:config name="rabbitmq" doc:name="AMQP Config" doc:id="4a2abf2e-166c-474d-ae52-5aba944e2176" >
+	<amqp:config name="amqp-rabbitmq-config" doc:name="AMQP Config" doc:id="4a2abf2e-166c-474d-ae52-5aba944e2176" >
 		<amqp:connection host="${rabbitmq.hostname}" port="${rabbitmq.port}" virtualHost="${rabbitmq.virtualhost}" username="${rabbitmq.username}" password="${rabbitmq.password}"/>
 	</amqp:config>
 	<configuration-properties doc:name="Configuration properties" doc:id="96b7b486-0e36-4f72-bf06-5a3806e5dd79" file="${secrets.path}" />

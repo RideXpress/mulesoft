@@ -10,9 +10,9 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
 
 	<flow name="get:\rides:router">
-		<logger level="INFO" message="get:\rides:router - Getting rides list" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides:router - Getting rides list', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="/rides" doc:name="Call database-system-api GET /rides">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="/rides" doc:name="Call database-system-api GET /rides">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 			<http:query-params><![CDATA[#[{from: attributes.queryParams.from, to: attributes.queryParams.to} filterObject ((value) -> value != null)]]]></http:query-params>
 		</http:request>
@@ -34,9 +34,9 @@ output application/json
 	</flow>
 
 	<flow name="post:\rides:router">
-		<logger level="INFO" message="post:\rides:router - Requesting ride" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\rides:router - Requesting ride', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="request-ride-process-api" method="POST" path="/rides" doc:name="Call request-ride-process-api POST /rides">
+		<http:request config-ref="http-request-request-ride-process-api-config" method="POST" path="/rides" doc:name="Call request-ride-process-api POST /rides">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 201 status">
@@ -75,9 +75,9 @@ output application/json
 	</flow>
 
 	<flow name="post:\rides\estimate:router">
-		<logger level="INFO" message="post:\rides\estimate:router - Calculating fare estimate" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\rides\estimate:router - Calculating fare estimate', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="request-ride-process-api" method="POST" path="/pricing/calculate" doc:name="Call request-ride-process-api POST /pricing/calculate">
+		<http:request config-ref="http-request-request-ride-process-api-config" method="POST" path="/pricing/calculate" doc:name="Call request-ride-process-api POST /pricing/calculate">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -116,9 +116,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id):router - Getting ride by ID" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id):router - Getting ride by ID', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -157,9 +157,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\details:router - Getting ride details" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\details:router - Getting ride details', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -198,9 +198,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\receipt:router - Getting ride receipt" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\receipt:router - Getting ride receipt', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -239,9 +239,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\live-location:router - Getting live driver location" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\live-location:router - Getting live driver location', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/driver/location']" doc:name="Call database-system-api GET driver location">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id ++ '/driver/location']" doc:name="Call database-system-api GET driver location">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -280,7 +280,7 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="post:\rides\(id)\share:router - Generating shareable trip link" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\rides\(id)\share:router - Generating shareable trip link', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
 		<ee:transform doc:name="Build share link response">
 			<ee:message>
@@ -301,9 +301,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\shared-view:router - Getting shared ride view" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\shared-view:router - Getting shared ride view', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id} for shared view">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id} for shared view">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -342,9 +342,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="patch:\rides\(id)\cancel:router - Cancelling ride" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'patch:\rides\(id)\cancel:router - Cancelling ride', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="cancel-ride-process-api" method="PATCH" path="#['/rides/' ++ vars.id ++ '/cancel']" doc:name="Call cancel-ride-process-api PATCH /rides/{id}/cancel">
+		<http:request config-ref="http-request-cancel-ride-process-api-config" method="PATCH" path="#['/rides/' ++ vars.id ++ '/cancel']" doc:name="Call cancel-ride-process-api PATCH /rides/{id}/cancel">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -383,9 +383,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\passenger:router - Getting passenger info" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\passenger:router - Getting passenger info', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/passenger']" doc:name="Call database-system-api GET /rides/{id}/passenger">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id ++ '/passenger']" doc:name="Call database-system-api GET /rides/{id}/passenger">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -424,9 +424,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\passenger\location:router - Getting passenger location" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\passenger\location:router - Getting passenger location', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/passenger/location']" doc:name="Call database-system-api GET passenger location">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id ++ '/passenger/location']" doc:name="Call database-system-api GET passenger location">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -465,9 +465,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\driver:router - Getting driver info" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\driver:router - Getting driver info', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/driver']" doc:name="Call database-system-api GET /rides/{id}/driver">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id ++ '/driver']" doc:name="Call database-system-api GET /rides/{id}/driver">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -506,9 +506,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\driver\location:router - Getting driver location" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\driver\location:router - Getting driver location', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id ++ '/driver/location']" doc:name="Call database-system-api GET driver location">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id ++ '/driver/location']" doc:name="Call database-system-api GET driver location">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -547,9 +547,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\payment:router - Getting payment info" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\payment:router - Getting payment info', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="square" method="GET" path="#['/payments/' ++ vars.id]" doc:name="Call square-system-api GET payment">
+		<http:request config-ref="http-request-square-config" method="GET" path="#['/payments/' ++ vars.id]" doc:name="Call square-system-api GET payment">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -588,9 +588,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\route:router - Getting ride route" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\route:router - Getting ride route', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="google-maps" method="GET" path="/directions/json" doc:name="Call google-maps GET directions">
+		<http:request config-ref="http-request-google-maps-config" method="GET" path="/directions/json" doc:name="Call google-maps GET directions">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 			<http:query-params><![CDATA[#[{key: p('googlemaps.key')}]]]></http:query-params>
 		</http:request>
@@ -617,7 +617,7 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="post:\rides\(id)\feedback:router - Submitting ride feedback" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\rides\(id)\feedback:router - Submitting ride feedback', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
 		<ee:transform doc:name="Build feedback payload">
 			<ee:message>
@@ -627,7 +627,7 @@ output application/json
 payload ++ {rideId: vars.id}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<amqp:publish doc:name="Publish feedback to RabbitMQ" config-ref="rabbitmq" exchangeName="feedback" />
+		<amqp:publish doc:name="Publish feedback to RabbitMQ" config-ref="amqp-rabbitmq-config" exchangeName="feedback" />
 		<ee:transform doc:name="Set 201 status">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
@@ -662,9 +662,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\status:router - Getting ride status" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\status:router - Getting ride status', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Extract status from response">
@@ -714,9 +714,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="put:\rides\(id)\status:router - Updating ride status" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'put:\rides\(id)\status:router - Updating ride status', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="PATCH" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api PATCH /rides/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="PATCH" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api PATCH /rides/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -755,9 +755,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\rides\(id)\summary:router - Getting ride summary" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\rides\(id)\summary:router - Getting ride summary', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/rides/' ++ vars.id]" doc:name="Call database-system-api GET /rides/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>

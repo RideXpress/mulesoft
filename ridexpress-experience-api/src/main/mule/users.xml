@@ -9,9 +9,9 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
 	<flow name="post:\user:router">
-		<logger level="INFO" message="post:\user:router - Creating user" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\user:router - Creating user', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="user-sign-up-process-api" method="POST" path="/signup" doc:name="Call user-sign-up-process-api POST /signup">
+		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="/signup" doc:name="Call user-sign-up-process-api POST /signup">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 201 status">
@@ -50,9 +50,9 @@ output application/json
 	</flow>
 
 	<flow name="get:\user:router">
-		<logger level="INFO" message="get:\user:router - Getting user" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\user:router - Getting user', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -86,9 +86,9 @@ output application/json
 	</flow>
 
 	<flow name="put:\user:router">
-		<logger level="INFO" message="put:\user:router - Updating user" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'put:\user:router - Updating user', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -135,7 +135,7 @@ output application/json
 	</flow>
 
 	<flow name="delete:\user:router">
-		<logger level="INFO" message="delete:\user:router - Deactivating user" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'delete:\user:router - Deactivating user', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
 		<ee:transform doc:name="Set deactivation payload">
 			<ee:message>
@@ -145,7 +145,7 @@ output application/json
 {active: false}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<http:request config-ref="database-system-api" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id} deactivate">
+		<http:request config-ref="http-request-database-system-api-config" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id} deactivate">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -179,9 +179,9 @@ output application/json
 	</flow>
 
 	<flow name="get:\user\vehicles:router">
-		<logger level="INFO" message="get:\user\vehicles:router - Getting user vehicles" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\user\vehicles:router - Getting user vehicles', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id ++ '/vehicles']" doc:name="Call database-system-api GET /users/{id}/vehicles">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/users/' ++ vars.id ++ '/vehicles']" doc:name="Call database-system-api GET /users/{id}/vehicles">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 			<http:query-params><![CDATA[#[{active: attributes.queryParams.active}]]]></http:query-params>
 		</http:request>
@@ -208,9 +208,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="put:\user\vehicles\(id):router - Updating vehicle" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'put:\user\vehicles\(id):router - Updating vehicle', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="PUT" path="#['/users/' ++ vars.id ++ '/vehicles/' ++ vars.id]" doc:name="Call database-system-api PUT /users/{userId}/vehicles/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="PUT" path="#['/users/' ++ vars.id ++ '/vehicles/' ++ vars.id]" doc:name="Call database-system-api PUT /users/{userId}/vehicles/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -244,9 +244,9 @@ output application/json
 	</flow>
 
 	<flow name="post:\user\geolocation:router">
-		<logger level="INFO" message="post:\user\geolocation:router - Posting user geolocation" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\user\geolocation:router - Posting user geolocation', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="POST" path="#['/users/' ++ vars.id ++ '/location']" doc:name="Call database-system-api POST /users/{id}/location">
+		<http:request config-ref="http-request-database-system-api-config" method="POST" path="#['/users/' ++ vars.id ++ '/location']" doc:name="Call database-system-api POST /users/{id}/location">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -267,7 +267,7 @@ output application/json
 	</flow>
 
 	<flow name="post:\user\attachments:router">
-		<logger level="INFO" message="post:\user\attachments:router - Attachment storage not yet implemented" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\user\attachments:router - Attachment storage not yet implemented', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<ee:transform doc:name="Set 501 response">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0

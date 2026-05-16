@@ -14,9 +14,9 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\users\(id)\profile:router - Getting user profile" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\users\(id)\profile:router - Getting user profile', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -55,9 +55,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="patch:\users\(id)\profile:router - Updating user profile" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'patch:\users\(id)\profile:router - Updating user profile', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id}">
+		<http:request config-ref="http-request-database-system-api-config" method="PATCH" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api PATCH /users/{id}">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -109,9 +109,9 @@ output application/json
 				<ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" message="get:\users\(id)\rides:router - Getting user ride history" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'get:\users\(id)\rides:router - Getting user ride history', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id ++ '/rides']" doc:name="Call database-system-api GET /users/{id}/rides">
+		<http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/users/' ++ vars.id ++ '/rides']" doc:name="Call database-system-api GET /users/{id}/rides">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 			<http:query-params><![CDATA[#[{page: attributes.queryParams.page default 1, size: attributes.queryParams.size default 20}]]]></http:query-params>
 		</http:request>

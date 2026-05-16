@@ -9,9 +9,9 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
 	<flow name="post:\support\tickets:router">
-		<logger level="INFO" message="post:\support\tickets:router - Creating support ticket" />
+		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\support\tickets:router - Creating support ticket', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="salesforce-system-api" method="POST" path="/cases" doc:name="Call salesforce-system-api POST /cases">
+		<http:request config-ref="http-request-salesforce-system-api-config" method="POST" path="/cases" doc:name="Call salesforce-system-api POST /cases">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 201 status">
