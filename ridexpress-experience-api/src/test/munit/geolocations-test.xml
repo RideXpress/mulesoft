@@ -15,7 +15,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock Google Maps text search" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"results": [], "status": "OK"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[{"results": [], "status": "OK"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>

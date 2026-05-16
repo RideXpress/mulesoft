@@ -16,7 +16,7 @@
             <munit-tools:mock-when doc:name="Mock database-system-api GET /rides" processor="http:request">
                 <munit-tools:then-return>
                     <munit-tools:payload
-                        value='#[write([{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "driver_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "status": "NEW", "start_location": "123456,523543425", "end_location": "1321,235352", "created_at": "2024-01-01", "updated_at": "2024-01-01"}], "application/json")]'
+                        value='#[[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "driver_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "status": "NEW", "start_location": "123456,523543425", "end_location": "1321,235352", "created_at": "2024-01-01", "updated_at": "2024-01-01"}]]'
                         mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
@@ -39,7 +39,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock request-ride-process-api POST /rides" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "NEW"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[{"ride_id": "44e128a5-ac7a-4c9a-be4c-224b6bf81b20", "status": "NEW"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -62,7 +62,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock request-ride-process-api POST /pricing/calculate" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"estimatedFare": 15.50, "estimatedDuration": 20, "rideType": "STANDARD"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[{"estimatedFare": 15.50, "estimatedDuration": 20, "rideType": "STANDARD"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -370,7 +370,7 @@
         </munit:behavior>
         <munit:execution>
             <munit:set-event doc:name="Set Event">
-                <munit:payload value='#[read(write({"rating": "5"}, "application/json"), "application/json")]' mediaType="application/java" />
+                <munit:payload value='#[{"rating": "5"}]' mediaType="application/json" />
                 <munit:attributes value="#[{uriParams: {id: '44e128a5-ac7a-4c9a-be4c-224b6bf81b20'}, headers: {}}]" />
             </munit:set-event>
             <flow-ref name="post:\rides\(id)\feedback:router" doc:name="Call post:\rides\(id)\feedback:router" />
@@ -386,7 +386,7 @@
         <munit:behavior>
             <munit-tools:mock-when doc:name="Mock database-system-api GET /rides/{id} for status" processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[read(write({"status": "NEW", "arrivalTime": 5}, "application/json"), "application/json")]' mediaType="application/java" />
+                    <munit-tools:payload value='#[{"status": "NEW", "arrivalTime": 5}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200, headers: {}}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
