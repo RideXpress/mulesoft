@@ -4,11 +4,11 @@
          instead of querying PostgreSQL directly (per API-led connectivity best practices) -->
 
     <sub-flow name="get-rides-impl">
-        <http:request config-ref="http-request-database-system-api-config" method="GET" path="/rides" doc:name="Call database-system-api GET /rides" />
+        <http:request config-ref="database-system-api" method="GET" path="/rides" doc:name="Call database-system-api GET /rides" />
     </sub-flow>
 
     <sub-flow name="get-user-by-id-impl">
-        <http:request config-ref="http-request-database-system-api-config" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}" />
+        <http:request config-ref="database-system-api" method="GET" path="#['/users/' ++ vars.id]" doc:name="Call database-system-api GET /users/{id}" />
     </sub-flow>
 
 </mule>

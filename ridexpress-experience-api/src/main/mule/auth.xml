@@ -9,9 +9,9 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
 	<flow name="post:\auth\login:router">
-		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\auth\login:router - Authenticating user', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
+		<logger level="INFO" message="post:\auth\login:router - Authenticating user" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="/auth/authenticate" doc:name="Call user-sign-up-process-api POST /auth/authenticate">
+		<http:request config-ref="user-sign-up-process-api" method="POST" path="/auth/authenticate" doc:name="Call user-sign-up-process-api POST /auth/authenticate">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -45,9 +45,9 @@ output application/json
 	</flow>
 
 	<flow name="post:\auth\token\refresh:router">
-		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\auth\token\refresh:router - Refreshing access token', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
+		<logger level="INFO" message="post:\auth\token\refresh:router - Refreshing access token" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="/auth/token/refresh" doc:name="Call user-sign-up-process-api POST /auth/token/refresh">
+		<http:request config-ref="user-sign-up-process-api" method="POST" path="/auth/token/refresh" doc:name="Call user-sign-up-process-api POST /auth/token/refresh">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<error-handler>
@@ -81,9 +81,9 @@ output application/json
 	</flow>
 
 	<flow name="post:\auth\reset-password:router">
-		<logger level="INFO" message="#[output application/json --- {priority: 'INFO', correlationId: correlationId, timestamp: now() as String, message: 'post:\auth\reset-password:router - Triggering password reset', applicationName: 'ridexpress-experience-api', applicationVersion: '1.0.0-SNAPSHOT'}]" />
+		<logger level="INFO" message="post:\auth\reset-password:router - Triggering password reset" />
 		<set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
-		<http:request config-ref="http-request-user-sign-up-process-api-config" method="POST" path="/auth/reset-password" doc:name="Call user-sign-up-process-api POST /auth/reset-password">
+		<http:request config-ref="user-sign-up-process-api" method="POST" path="/auth/reset-password" doc:name="Call user-sign-up-process-api POST /auth/reset-password">
 			<http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Set 200 response">
