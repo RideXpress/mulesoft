@@ -55,7 +55,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -116,7 +116,7 @@ output application/json
 {message: "Driver not found"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['404']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</otherwise>
@@ -131,7 +131,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -142,13 +142,14 @@ output application/json
 	<flow name="post:\drivers\(id):router">
 		<logger level="INFO" message="post:\drivers\(id):router - Creating driver record" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver">
 			<db:sql><![CDATA[INSERT INTO ridexpress.drivers (user_id, license_number, license_expiry)
 VALUES (CAST(:userId AS UUID), :licenseNumber, CAST(:licenseExpiry AS DATE))]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	userId: attributes.uriParams.id,
-	licenseNumber: payload.licenseNumber,
-	licenseExpiry: payload.licenseExpiry
+	licenseNumber: vars.requestPayload.licenseNumber,
+	licenseExpiry: vars.requestPayload.licenseExpiry
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -159,7 +160,7 @@ output application/json
 {message: "Driver record created successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -172,7 +173,7 @@ output application/json
 {message: "Driver record already exists or constraint violation"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">409</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['409']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -185,7 +186,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -196,6 +197,7 @@ output application/json
 	<flow name="patch:\drivers\(id):router">
 		<logger level="INFO" message="patch:\drivers\(id):router - Updating driver" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:update config-ref="database-ridexpress-config" doc:name="Update driver by ID">
 			<db:sql><![CDATA[UPDATE ridexpress.drivers SET
 	availability_status = COALESCE(:availabilityStatus, availability_status),
@@ -211,42 +213,25 @@ output application/json
 WHERE user_id = CAST(:id AS UUID)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	id: attributes.uriParams.id,
-	availabilityStatus: payload.availabilityStatus default null,
-	onboardingStatus: payload.onboardingStatus default null,
-	backgroundCheckId: payload.backgroundCheckId default null,
-	backgroundCheckStatus: payload.backgroundCheckStatus default null,
-	licensePhotoUrl: payload.licensePhotoUrl default null,
-	insuranceDocUrl: payload.insuranceDocUrl default null,
-	averageRating: payload.averageRating default null,
-	totalRides: payload.totalRides default null,
-	cumulativeBalance: payload.cumulativeBalance default null
+	availabilityStatus: vars.requestPayload.availabilityStatus default null,
+	onboardingStatus: vars.requestPayload.onboardingStatus default null,
+	backgroundCheckId: vars.requestPayload.backgroundCheckId default null,
+	backgroundCheckStatus: vars.requestPayload.backgroundCheckStatus default null,
+	licensePhotoUrl: vars.requestPayload.licensePhotoUrl default null,
+	insuranceDocUrl: vars.requestPayload.insuranceDocUrl default null,
+	averageRating: vars.requestPayload.averageRating default null,
+	totalRides: vars.requestPayload.totalRides default null,
+	cumulativeBalance: vars.requestPayload.cumulativeBalance default null
 }]]]></db:input-parameters>
 		</db:update>
-		<choice doc:name="Check if driver updated">
-			<when expression="#[payload > 0]">
-				<ee:transform doc:name="Set 200 response">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+		<ee:transform doc:name="Set 200 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "Driver updated successfully"}]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-			</when>
-			<otherwise>
-				<ee:transform doc:name="Set 404 response">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Driver not found"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</otherwise>
-		</choice>
+			</ee:message>
+		</ee:transform>
 		<error-handler>
 			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
 				<ee:transform doc:name="Set 503 response">
@@ -257,7 +242,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -268,17 +253,18 @@ output application/json
 	<flow name="post:\drivers\(id)\vehicles:router">
 		<logger level="INFO" message="post:\drivers\(id)\vehicles:router - Registering driver vehicle" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver vehicle">
 			<db:sql><![CDATA[INSERT INTO ridexpress.vehicles (user_id, make, model, year, license_plate, insurance_policy, is_active)
 VALUES (CAST(:userId AS UUID), :make, :model, :year, :licensePlate, :insurancePolicy, :isActive)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	userId: attributes.uriParams.id,
-	make: payload.make,
-	model: payload.model,
-	year: payload.year,
-	licensePlate: payload.licensePlate,
-	insurancePolicy: payload.insurancePolicy,
-	isActive: payload.isActive default false
+	make: vars.requestPayload.make,
+	model: vars.requestPayload.model,
+	year: vars.requestPayload.year,
+	licensePlate: vars.requestPayload.licensePlate,
+	insurancePolicy: vars.requestPayload.insurancePolicy,
+	isActive: vars.requestPayload.isActive default false
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -289,7 +275,7 @@ output application/json
 {message: "Driver vehicle registered successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -302,7 +288,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -313,14 +299,15 @@ output application/json
 	<flow name="post:\drivers\(id)\documents:router">
 		<logger level="INFO" message="post:\drivers\(id)\documents:router - Uploading driver documents" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver document">
 			<db:sql><![CDATA[INSERT INTO ridexpress.user_attachments (user_id, document_type, file_name, file_path)
 VALUES (CAST(:userId AS UUID), :documentType, :fileName, :filePath)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	userId: attributes.uriParams.id,
-	documentType: payload.documentType,
-	fileName: payload.fileName,
-	filePath: payload.filePath
+	documentType: vars.requestPayload.documentType,
+	fileName: vars.requestPayload.fileName,
+	filePath: vars.requestPayload.filePath
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -331,7 +318,7 @@ output application/json
 {message: "Document uploaded successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -344,7 +331,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -355,15 +342,16 @@ output application/json
 	<flow name="post:\drivers\(id)\banking:router">
 		<logger level="INFO" message="post:\drivers\(id)\banking:router - Storing driver banking info" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver banking">
 			<db:sql><![CDATA[INSERT INTO ridexpress.driver_banking (user_id, bank_name, account_holder, routing_number, account_token)
 VALUES (CAST(:userId AS UUID), :bankName, :accountHolder, :routingNumber, :accountToken)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	userId: attributes.uriParams.id,
-	bankName: payload.bankName,
-	accountHolder: payload.accountHolder,
-	routingNumber: payload.routingNumber,
-	accountToken: payload.accountToken
+	bankName: vars.requestPayload.bankName,
+	accountHolder: vars.requestPayload.accountHolder,
+	routingNumber: vars.requestPayload.routingNumber,
+	accountToken: vars.requestPayload.accountToken
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -374,7 +362,7 @@ output application/json
 {message: "Banking information stored successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -387,7 +375,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -432,7 +420,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>

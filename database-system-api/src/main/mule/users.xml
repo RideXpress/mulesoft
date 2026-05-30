@@ -14,19 +14,20 @@
 	<flow name="post:\users:router">
 		<logger level="INFO" message="post:\users:router - Creating new user" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert user">
 			<db:sql><![CDATA[INSERT INTO ridexpress.users (user_name, email, mobile, first_name, middle_name, last_name, user_type, address, driver_license)
 VALUES (:userName, :email, :mobile, :firstName, :middleName, :lastName, :userType, :address, :driverLicense)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
-	userName: payload.userName,
-	email: payload.email,
-	mobile: payload.mobile default null,
-	firstName: payload.firstName,
-	middleName: payload.middleName default null,
-	lastName: payload.lastName,
-	userType: payload.userType default 'PASSENGER',
-	address: payload.address default null,
-	driverLicense: payload.driverLicense default null
+	userName: vars.requestPayload.userName,
+	email: vars.requestPayload.email,
+	mobile: vars.requestPayload.mobile default null,
+	firstName: vars.requestPayload.firstName,
+	middleName: vars.requestPayload.middleName default null,
+	lastName: vars.requestPayload.lastName,
+	userType: vars.requestPayload.userType default 'PASSENGER',
+	address: vars.requestPayload.address default null,
+	driverLicense: vars.requestPayload.driverLicense default null
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -34,10 +35,10 @@ VALUES (:userName, :email, :mobile, :firstName, :middleName, :lastName, :userTyp
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-{message: (payload.userName default "User") ++ " user created successfully"}]]></ee:set-payload>
+{message: "User created successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -50,7 +51,7 @@ output application/json
 {message: "User already exists or constraint violation: " ++ (error.description default "unknown error")}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">409</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['409']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -63,7 +64,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -111,7 +112,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -162,7 +163,7 @@ output application/json
 {message: "User not found"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['404']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</otherwise>
@@ -177,7 +178,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -188,6 +189,7 @@ output application/json
 	<flow name="patch:\users\(id):router">
 		<logger level="INFO" message="patch:\users\(id):router - Updating user" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:update config-ref="database-ridexpress-config" doc:name="Update user by ID">
 			<db:sql><![CDATA[UPDATE ridexpress.users SET
 	email = COALESCE(:email, email),
@@ -201,40 +203,23 @@ output application/json
 WHERE user_id = CAST(:id AS UUID)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	id: attributes.uriParams.id,
-	email: payload.email default null,
-	mobile: payload.mobile default null,
-	firstName: payload.firstName default null,
-	middleName: payload.middleName default null,
-	lastName: payload.lastName default null,
-	address: payload.address default null,
-	driverLicense: payload.driverLicense default null
+	email: vars.requestPayload.email default null,
+	mobile: vars.requestPayload.mobile default null,
+	firstName: vars.requestPayload.firstName default null,
+	middleName: vars.requestPayload.middleName default null,
+	lastName: vars.requestPayload.lastName default null,
+	address: vars.requestPayload.address default null,
+	driverLicense: vars.requestPayload.driverLicense default null
 }]]]></db:input-parameters>
 		</db:update>
-		<choice doc:name="Check if user updated">
-			<when expression="#[payload > 0]">
-				<ee:transform doc:name="Set 200 response">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
+		<ee:transform doc:name="Set 200 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {message: "User updated successfully"}]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
-			</when>
-			<otherwise>
-				<ee:transform doc:name="Set 404 response">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "User not found"}]]></ee:set-payload>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-			</otherwise>
-		</choice>
+			</ee:message>
+		</ee:transform>
 		<error-handler>
 			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
 				<ee:transform doc:name="Set 503 response">
@@ -245,7 +230,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -287,7 +272,7 @@ output application/json
 {message: "Location not found for user"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['404']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</otherwise>
@@ -302,7 +287,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -313,13 +298,14 @@ output application/json
 	<flow name="post:\users\(id)\location:router">
 		<logger level="INFO" message="post:\users\(id)\location:router - Posting user location" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert user location">
 			<db:sql><![CDATA[INSERT INTO ridexpress.user_locations (user_id, latitude, longitude)
 VALUES (CAST(:userId AS UUID), :latitude, :longitude)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	userId: attributes.uriParams.id,
-	latitude: payload.lat,
-	longitude: payload.long
+	latitude: vars.requestPayload.lat,
+	longitude: vars.requestPayload.long
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -330,7 +316,7 @@ output application/json
 {message: "Location recorded successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -343,7 +329,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -354,14 +340,15 @@ output application/json
 	<flow name="post:\users\(id)\feedback:router">
 		<logger level="INFO" message="post:\users\(id)\feedback:router - Submitting user feedback" />
 		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<set-variable variableName="requestPayload" value="#[payload]" />
 		<db:insert config-ref="database-ridexpress-config" doc:name="Insert user feedback">
 			<db:sql><![CDATA[INSERT INTO ridexpress.ride_feedback (ride_id, user_id, rating, comment)
 VALUES (CAST(:rideId AS UUID), CAST(:userId AS UUID), :rating, :comment)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
-	rideId: payload.rideId default null,
+	rideId: vars.requestPayload.rideId default null,
 	userId: attributes.uriParams.id,
-	rating: payload.rating,
-	comment: payload.comment default null
+	rating: vars.requestPayload.rating,
+	comment: vars.requestPayload.comment default null
 }]]]></db:input-parameters>
 		</db:insert>
 		<ee:transform doc:name="Set 201 response">
@@ -372,7 +359,7 @@ output application/json
 {message: "Feedback processed successfully"}]]></ee:set-payload>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+				<ee:set-variable variableName="httpStatus"><![CDATA['201']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<error-handler>
@@ -385,7 +372,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
