@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+	<munit:config name="drivers-test" />
+
+	<!-- GET /drivers — List drivers -->
+	<munit:test name="get-drivers-test" description="Test GET /drivers - lists available drivers">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "license_number": "DL123", "availability_status": "online", "onboarding_status": "active", "average_rating": 4.8, "total_rides": 100, "cumulative_balance": 250.00, "created_at": "2024-01-01", "updated_at": "2024-01-01", "first_name": "John", "last_name": "Driver", "email": "john@ridexpress.io", "mobile": "4151234567"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\drivers:router" doc:name="Call get:\drivers:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /drivers/{id} — Get driver by ID -->
+	<munit:test name="get-driver-by-id-test" description="Test GET /drivers/{id} - retrieves driver by ID">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "license_number": "DL123", "license_expiry": "2026-12-31", "license_photo_url": null, "insurance_doc_url": null, "background_check_id": null, "background_check_status": "approved", "onboarding_status": "active", "availability_status": "online", "average_rating": 4.8, "total_rides": 100, "cumulative_balance": 250.00, "created_at": "2024-01-01", "updated_at": "2024-01-01", "first_name": "John", "last_name": "Driver", "email": "john@ridexpress.io", "mobile": "4151234567", "user_name": "jdriver"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\drivers\(id):router" doc:name="Call get:\drivers\(id):router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- POST /drivers/{id} — Create driver -->
+	<munit:test name="post-driver-test" description="Test POST /drivers/{id} - creates driver record">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"licenseNumber": "DL123456", "licenseExpiry": "2026-12-31"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\drivers\(id):router" doc:name="Call post:\drivers\(id):router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 201 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('201')]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- PATCH /drivers/{id} — Update driver -->
+	<munit:test name="patch-driver-test" description="Test PATCH /drivers/{id} - updates driver record">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB update" processor="db:update">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"availabilityStatus": "online"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="patch:\drivers\(id):router" doc:name="Call patch:\drivers\(id):router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- POST /drivers/{id}/vehicles — Register driver vehicle -->
+	<munit:test name="post-driver-vehicles-test" description="Test POST /drivers/{id}/vehicles - registers driver vehicle">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"make": "Ford", "model": "Focus", "year": 2012, "licensePlate": "8PSQ3456", "insurancePolicy": "ABC123456"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\drivers\(id)\vehicles:router" doc:name="Call post:\drivers\(id)\vehicles:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 201 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('201')]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- POST /drivers/{id}/documents — Upload documents -->
+	<munit:test name="post-driver-documents-test" description="Test POST /drivers/{id}/documents - uploads driver documents">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"documentType": "license", "fileName": "license.pdf", "filePath": "/uploads/license.pdf"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\drivers\(id)\documents:router" doc:name="Call post:\drivers\(id)\documents:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 201 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('201')]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- POST /drivers/{id}/banking — Store banking info -->
+	<munit:test name="post-driver-banking-test" description="Test POST /drivers/{id}/banking - stores banking info">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"bankName": "Chase", "accountHolder": "John Driver", "routingNumber": "021000021", "accountToken": "tok_123456"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\drivers\(id)\banking:router" doc:name="Call post:\drivers\(id)\banking:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 201 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('201')]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /drivers/payouts/pending — Get drivers eligible for payout -->
+	<munit:test name="get-drivers-payouts-pending-test" description="Test GET /drivers/payouts/pending - retrieves drivers eligible for payout">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "cumulative_balance": 250.00, "average_rating": 4.8, "total_rides": 100, "first_name": "John", "last_name": "Driver", "email": "john@ridexpress.io"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\drivers\payouts\pending:router" doc:name="Call get:\drivers\payouts\pending:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+</mule>

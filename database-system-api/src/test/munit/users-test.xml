@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+	<munit:config name="users-test" />
+
+	<!-- POST /users — Create user -->
+	<munit:test name="post-users-test" description="Test POST /users - creates a new user in database">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"userName": "testuser", "email": "test@ridexpress.io", "firstName": "Test", "lastName": "User", "userType": "PASSENGER"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\users:router" doc:name="Call post:\users:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /users — List users -->
+	<munit:test name="get-users-test" description="Test GET /users - lists all users from database">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "user_name": "testuser", "email": "test@ridexpress.io", "mobile": "4153435678", "first_name": "Test", "middle_name": null, "last_name": "User", "user_type": "PASSENGER", "address": null, "driver_license": null, "is_active": true, "created_at": "2024-01-01", "updated_at": "2024-01-01"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\users:router" doc:name="Call get:\users:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /users/{id} — Get user by ID -->
+	<munit:test name="get-users-by-id-test" description="Test GET /users/{id} - retrieves user by ID">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"user_id": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "user_name": "testuser", "email": "test@ridexpress.io", "mobile": "4153435678", "first_name": "Test", "middle_name": null, "last_name": "User", "user_type": "PASSENGER", "address": null, "driver_license": null, "is_active": true, "created_at": "2024-01-01", "updated_at": "2024-01-01"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\users\(id):router" doc:name="Call get:\users\(id):router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /users/{id} — User not found -->
+	<munit:test name="get-users-by-id-not-found-test" description="Test GET /users/{id} - returns 404 when user not found">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select empty" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[[]]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, uriParams: {id: '00000000-0000-0000-0000-000000000000'}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\users\(id):router" doc:name="Call get:\users\(id):router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 404 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('404')]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- PATCH /users/{id} — Update user -->
+	<munit:test name="patch-users-by-id-test" description="Test PATCH /users/{id} - updates user by ID">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB update" processor="db:update">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"email": "updated@ridexpress.io"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="patch:\users\(id):router" doc:name="Call patch:\users\(id):router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /users/{id}/location — Get user location -->
+	<munit:test name="get-users-location-test" description="Test GET /users/{id}/location - retrieves latest user location">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"latitude": 37.7749, "longitude": -122.4194, "created_at": "2024-01-01T10:00:00Z"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\users\(id)\location:router" doc:name="Call get:\users\(id)\location:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- POST /users/{id}/location — Post user location -->
+	<munit:test name="post-users-location-test" description="Test POST /users/{id}/location - records user location">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"lat": 37.7749, "long": -122.4194}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\users\(id)\location:router" doc:name="Call post:\users\(id)\location:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 201 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('201')]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- POST /users/{id}/feedback — Submit user feedback -->
+	<munit:test name="post-users-feedback-test" description="Test POST /users/{id}/feedback - submits user feedback">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB insert" processor="db:insert">
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[1]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Request Payload">
+				<munit:payload value='#[{"rating": 5, "comment": "Great service!"}]' mediaType="application/json" />
+				<munit:attributes value="#[{headers: {}, uriParams: {id: 'e58ed763-928c-4155-bee9-fdbaaadc15f3'}}]" />
+			</munit:set-event>
+			<flow-ref name="post:\users\(id)\feedback:router" doc:name="Call post:\users\(id)\feedback:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert 201 status" expression="#[vars.httpStatus]" is="#[MunitTools::equalTo('201')]" />
+		</munit:validation>
+	</munit:test>
+
+</mule>
