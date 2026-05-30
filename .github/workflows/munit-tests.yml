@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+
 jobs:
   test-ridexpress-experience-api:
     name: "MUnit: ridexpress-experience-api"
