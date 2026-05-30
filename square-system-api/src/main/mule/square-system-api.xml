@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/payment-link - Create payment link -->
+    <flow name="post-payment-link-flow">
+        <http:listener config-ref="http-listener-config" path="/api/payment-link" method="POST" />
+        <logger level="INFO" message="post-payment-link-flow - Creating payment link" />
+        <set-variable variableName="linkPayload" value="#[payload]" />
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    idempotency_key: uuid(),
+    quick_pay: {
+        name: vars.linkPayload.name,
+        price_money: {
+            amount: (vars.linkPayload.amount * 100) as Number as String {format: "0"},
+            currency: vars.linkPayload.currency default "USD"
+        },
+        location_id: p('square.locationId')
+    },
+    checkout_options: {
+        allow_tipping: vars.linkPayload.allowTipping default true
+    }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="square-request-config" method="POST" path="/online-checkout/payment-links">
+            <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken'), 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    orderId: payload.payment_link.order_id default "",
+    url: payload.payment_link.url default "",
+    longUrl: payload.payment_link.long_url default "",
+    createdAt: payload.payment_link.created_at default ""
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payment link creation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- GET /api/orders/{orderId} - Get order -->
+    <flow name="get-orders-flow">
+        <http:listener config-ref="http-listener-config" path="/api/orders/{orderId}" method="GET" />
+        <logger level="INFO" message="get-orders-flow - Getting order" />
+        <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]" />
+        <http:request config-ref="square-request-config" method="GET" path="#['/orders/' ++ vars.orderId]">
+            <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken')}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Order not found"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- PUT /api/orders/{orderId} - Update order -->
+    <flow name="put-orders-flow">
+        <http:listener config-ref="http-listener-config" path="/api/orders/{orderId}" method="PUT" />
+        <logger level="INFO" message="put-orders-flow - Updating order" />
+        <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]" />
+        <set-variable variableName="orderPayload" value="#[payload]" />
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    order: {
+        location_id: p('square.locationId'),
+        state: vars.orderPayload.state
+    },
+    idempotency_key: uuid()
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="square-request-config" method="PUT" path="#['/orders/' ++ vars.orderId]">
+            <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken'), 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Order update failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/customers - Create customer -->
+    <flow name="post-customers-flow">
+        <http:listener config-ref="http-listener-config" path="/api/customers" method="POST" />
+        <logger level="INFO" message="post-customers-flow - Creating Square customer" />
+        <http:request config-ref="square-request-config" method="POST" path="/customers">
+            <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken'), 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Customer creation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/payouts - Initiate driver payout -->
+    <flow name="post-payouts-flow">
+        <http:listener config-ref="http-listener-config" path="/api/payouts" method="POST" />
+        <logger level="INFO" message="post-payouts-flow - Initiating payout" />
+        <http:request config-ref="square-request-config" method="POST" path="/payouts">
+            <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken'), 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payout initiation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

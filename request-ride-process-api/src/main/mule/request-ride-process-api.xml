@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/rides - Create ride orchestration -->
+    <flow name="post-rides-flow">
+        <http:listener config-ref="http-listener-config" path="/api/rides" method="POST" />
+        <logger level="INFO" message="post-rides-flow - Orchestrating ride request" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="rideRequest" value="#[payload]" />
+        <!-- Step 1: Calculate fare via Google Maps -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    origin: vars.rideRequest.pickupLocation,
+    destination: vars.rideRequest.destination
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="google-maps-system-api" method="POST" path="/geolocation">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="routeInfo" value="#[payload]" />
+        <!-- Step 2: Create ride in database -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    userId: vars.rideRequest.userId,
+    pickupLocation: vars.rideRequest.pickupLocation,
+    destination: vars.rideRequest.destination,
+    destinationName: vars.rideRequest.destinationName,
+    rideType: vars.rideRequest.rideType default "ECONOMY",
+    estimatedFare: vars.routeInfo.estimatedFare default 0,
+    status: "NEW"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="database-system-api" method="POST" path="/rides">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="rideResponse" value="#[payload]" />
+        <!-- Step 3: Create payment link via Square -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    name: "Ride - " ++ (vars.rideRequest.destinationName default "destination"),
+    amount: vars.routeInfo.estimatedFare default 0,
+    currency: "USD",
+    allowTipping: true
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="square-system-api" method="POST" path="/payment-link">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Return ride response -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.rideResponse]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride request failed: " ++ (error.description default "unknown error"), errorType: error.errorType.identifier default "UNKNOWN"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/pricing/calculate - Fare estimation -->
+    <flow name="post-pricing-calculate-flow">
+        <http:listener config-ref="http-listener-config" path="/api/pricing/calculate" method="POST" />
+        <logger level="INFO" message="post-pricing-calculate-flow - Calculating fare estimate" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="estimateRequest" value="#[payload]" />
+        <!-- Get route distance/duration from Google Maps -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    origin: vars.estimateRequest.pickupLocation,
+    destination: vars.estimateRequest.destination
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="google-maps-system-api" method="POST" path="/geolocation">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="routeInfo" value="#[payload]" />
+        <!-- Get pricing parameters from DB -->
+        <http:request config-ref="database-system-api" method="GET" path="/pricing">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="pricing" value="#[payload]" />
+        <!-- Get ride types from DB -->
+        <http:request config-ref="database-system-api" method="GET" path="/ride-types">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="rideTypes" value="#[payload]" />
+        <!-- Calculate fare -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var distance = vars.routeInfo.distanceMiles default 5
+var duration = vars.routeInfo.durationMinutes default 15
+var baseFare = vars.pricing.baseFare default 2.50
+var perMile = vars.pricing.perMileRate default 1.25
+var perMinute = vars.pricing.perMinuteRate default 0.20
+var minimumFare = vars.pricing.minimumFare default 5.00
+var bookingFee = vars.pricing.bookingFee default 1.50
+var surgeMultiplier = 1.00
+var rawFare = baseFare + (distance * perMile) + (duration * perMinute)
+var estimatedFare = max([rawFare, minimumFare]) + bookingFee
+---
+{
+    estimatedFare: estimatedFare * surgeMultiplier,
+    estimatedDuration: duration,
+    distanceMiles: distance,
+    surgeMultiplier: surgeMultiplier,
+    breakdown: {
+        baseFare: baseFare,
+        distanceCharge: distance * perMile,
+        timeCharge: duration * perMinute,
+        bookingFee: bookingFee
+    }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Pricing calculation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- PATCH /api/rides/{id} - Update ride status -->
+    <flow name="patch-rides-flow">
+        <http:listener config-ref="http-listener-config" path="/api/rides/{id}" method="PATCH" />
+        <logger level="INFO" message="patch-rides-flow - Updating ride status" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="rideId" value="#[attributes.uriParams.id]" />
+        <http:request config-ref="database-system-api" method="PATCH" path="#['/ride/' ++ vars.rideId]">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

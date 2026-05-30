@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <flow name="post-contacts-flow">
+        <http:listener config-ref="http-listener-config" path="/api/contacts" method="POST" />
+        <logger level="INFO" message="post-contacts-flow - Creating Salesforce contact" />
+        <http:request config-ref="salesforce-request-config" method="POST" path="/sobjects/Contact">
+            <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Salesforce contact creation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <flow name="post-cases-flow">
+        <http:listener config-ref="http-listener-config" path="/api/cases" method="POST" />
+        <logger level="INFO" message="post-cases-flow - Creating Salesforce case" />
+        <http:request config-ref="salesforce-request-config" method="POST" path="/sobjects/Case">
+            <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Case creation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <flow name="post-rides-flow">
+        <http:listener config-ref="http-listener-config" path="/api/rides" method="POST" />
+        <logger level="INFO" message="post-rides-flow - Syncing ride to Salesforce" />
+        <http:request config-ref="salesforce-request-config" method="POST" path="/sobjects/Ride__c">
+            <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Salesforce ride sync failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

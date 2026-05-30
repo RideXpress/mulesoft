@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/cancel - Cancel ride with charge/refund evaluation -->
+    <flow name="post-cancel-flow">
+        <http:listener config-ref="http-listener-config" path="/api/cancel" method="POST" />
+        <logger level="INFO" message="post-cancel-flow - Cancelling ride" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="cancelPayload" value="#[payload]" />
+        <!-- Step 1: Get ride details from DB -->
+        <http:request config-ref="database-system-api" method="GET" path="#['/ride/' ++ vars.cancelPayload.rideId]">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="rideDetails" value="#[payload]" />
+        <!-- Step 2: Determine cancel with or without charge -->
+        <choice>
+            <when expression="#[vars.rideDetails.status == 'NEW' or vars.rideDetails.status == 'WAITING_FOR_DRIVER']">
+                <!-- Cancel without charge -->
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "CANCELED_FOR_REFUND"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+            <otherwise>
+                <!-- Cancel with charge -->
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "CANCELED_WITHOUT_REFUND"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </otherwise>
+        </choice>
+        <set-variable variableName="cancelStatus" value="#[payload.status]" />
+        <!-- Step 3: Update ride status in DB -->
+        <http:request config-ref="database-system-api" method="PATCH" path="#['/ride/' ++ vars.cancelPayload.rideId]">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Step 4: Handle payment via Square -->
+        <choice>
+            <when expression="#[vars.cancelStatus == 'CANCELED_FOR_REFUND']">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{state: "CANCELED"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <http:request config-ref="square-system-api" method="PUT" path="#['/orders/' ++ (vars.cancelPayload.orderId default '')]">
+                    <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+                </http:request>
+            </when>
+            <otherwise>
+                <logger level="INFO" message="Cancellation with charge - no refund issued" />
+            </otherwise>
+        </choice>
+        <!-- Step 5: Notify parties -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{userId: vars.cancelPayload.userId, title: "Ride Cancelled", message: "Your ride has been cancelled.", rideId: vars.cancelPayload.rideId}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="push-notifications-system-api" method="POST" path="/notify">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Return response -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{rideId: vars.cancelPayload.rideId, status: vars.cancelStatus}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Cancel ride failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

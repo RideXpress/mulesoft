@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/accept - Driver accepts a ride -->
+    <flow name="post-accept-flow">
+        <http:listener config-ref="http-listener-config" path="/api/accept" method="POST" />
+        <logger level="INFO" message="post-accept-flow - Driver accepting ride" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="acceptPayload" value="#[payload]" />
+        <!-- Update ride status to ACCEPTED_BY_DRIVER -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{status: "ACCEPTED_BY_DRIVER", driverId: vars.acceptPayload.driverId}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="database-system-api" method="PATCH" path="#['/ride/' ++ vars.acceptPayload.rideId]">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="rideResponse" value="#[payload]" />
+        <!-- Notify passenger -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{userId: vars.acceptPayload.passengerId, title: "Driver Assigned", message: "Your driver is on the way!", rideId: vars.acceptPayload.rideId}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="push-notifications-system-api" method="POST" path="/notify">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Return response -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.rideResponse]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Accept ride failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

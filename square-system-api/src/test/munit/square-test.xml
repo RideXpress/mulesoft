@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="square-test" />
+
+    <munit:test name="post-payment-link-test" description="Test POST /api/payment-link - create payment link">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[write({"payment_link": {"order_id": "order-abc", "url": "https://square.link/pay/abc", "long_url": "https://checkout.square.site/abc", "created_at": "2024-01-01T00:00:00Z"}}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[{"name": "Ride to Airport", "amount": 25.00, "currency": "USD", "allowTipping": true}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}, requestUri: '/api/payment-link', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-payment-link-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload.orderId]" is="#[MunitTools::notNullValue()]" />
+            <munit-tools:assert-that expression="#[payload.url]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-orders-test" description="Test GET /api/orders/{orderId}">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[write({"order": {"id": "order-abc", "state": "OPEN"}}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:attributes value="#[{headers: {}, uriParams: {orderId: 'order-abc'}, requestUri: '/api/orders/order-abc', method: 'GET'}]" />
+            </munit:set-event>
+            <flow-ref name="get-orders-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-customers-test" description="Test POST /api/customers - create customer">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[write({"customer": {"id": "cust-abc"}}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[{"given_name": "John", "family_name": "Doe", "email_address": "john@test.com"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}, requestUri: '/api/customers', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-customers-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+</mule>

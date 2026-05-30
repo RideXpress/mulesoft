@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/signup - Client sign-up orchestration -->
+    <flow name="post-signup-flow">
+        <http:listener config-ref="http-listener-config" path="/api/signup" method="POST" />
+        <logger level="INFO" message="post-signup-flow - Orchestrating client sign-up" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="userPayload" value="#[payload]" />
+        <!-- Step 1: Create user in database -->
+        <http:request config-ref="database-system-api" method="POST" path="/users">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <set-variable variableName="dbResponse" value="#[payload]" />
+        <!-- Step 2: Create user in Okta -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    email: vars.userPayload.email,
+    firstName: vars.userPayload.firstName,
+    lastName: vars.userPayload.lastName,
+    userType: vars.userPayload.userType default "PASSENGER"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="okta-system-api" method="POST" path="/users">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Step 3: Send welcome email -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    to: vars.userPayload.email,
+    subject: "Welcome to RideXpress!",
+    template: "welcome",
+    data: {firstName: vars.userPayload.firstName}
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="email-system-api" method="POST" path="/send">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Return DB response -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.dbResponse]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Sign-up failed: " ++ (error.description default "unknown error"), errorType: error.errorType.identifier default "UNKNOWN"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/auth/authenticate - Login via Okta -->
+    <flow name="post-auth-authenticate-flow">
+        <http:listener config-ref="http-listener-config" path="/api/auth/authenticate" method="POST" />
+        <logger level="INFO" message="post-auth-authenticate-flow - Authenticating user" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <http:request config-ref="okta-system-api" method="POST" path="/authn">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:UNAUTHORIZED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Invalid credentials"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/auth/token/refresh - Refresh Okta token -->
+    <flow name="post-auth-token-refresh-flow">
+        <http:listener config-ref="http-listener-config" path="/api/auth/token/refresh" method="POST" />
+        <logger level="INFO" message="post-auth-token-refresh-flow - Refreshing token" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <http:request config-ref="okta-system-api" method="POST" path="/token/refresh">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:UNAUTHORIZED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Invalid or expired refresh token"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/auth/reset-password - Trigger Okta password reset -->
+    <flow name="post-auth-reset-password-flow">
+        <http:listener config-ref="http-listener-config" path="/api/auth/reset-password" method="POST" />
+        <logger level="INFO" message="post-auth-reset-password-flow - Resetting password" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="email"><![CDATA[payload.email]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <http:request config-ref="okta-system-api" method="POST" path="#['/users/' ++ vars.email ++ '/reset-password']">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/drivers/{id}/vehicle - Driver vehicle registration -->
+    <flow name="post-drivers-vehicle-flow">
+        <http:listener config-ref="http-listener-config" path="/api/drivers/{id}/vehicle" method="POST" />
+        <logger level="INFO" message="post-drivers-vehicle-flow - Registering driver vehicle" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="driverId" value="#[attributes.uriParams.id]" />
+        <http:request config-ref="database-system-api" method="POST" path="#['/drivers/' ++ vars.driverId ++ '/vehicles']">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver not found"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/drivers/{id}/documents - Driver document upload -->
+    <flow name="post-drivers-documents-flow">
+        <http:listener config-ref="http-listener-config" path="/api/drivers/{id}/documents" method="POST" />
+        <logger level="INFO" message="post-drivers-documents-flow - Uploading driver documents" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="driverId" value="#[attributes.uriParams.id]" />
+        <set-variable variableName="documentsPayload" value="#[payload]" />
+        <!-- Store documents in DB -->
+        <http:request config-ref="database-system-api" method="POST" path="#['/drivers/' ++ vars.driverId ++ '/documents']">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <!-- Initiate background check -->
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{driverId: vars.driverId, documents: vars.documentsPayload}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="background-check-system-api" method="POST" path="/checks">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver not found"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/drivers/{id}/banking - Driver banking info -->
+    <flow name="post-drivers-banking-flow">
+        <http:listener config-ref="http-listener-config" path="/api/drivers/{id}/banking" method="POST" />
+        <logger level="INFO" message="post-drivers-banking-flow - Registering banking info" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <set-variable variableName="driverId" value="#[attributes.uriParams.id]" />
+        <http:request config-ref="database-system-api" method="POST" path="#['/drivers/' ++ vars.driverId ++ '/banking']">
+            <http:headers><![CDATA[#[{'X-Transaction-Id': vars.transactionId, 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver not found"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

@@ -1,12 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
-	<flow name="request-ride" doc:id="c61c0764-7610-4895-8531-7f5740711892" >
-		<amqp:listener doc:name="Listener" doc:id="39bcb91e-abcd-4cdd-bed4-97179afcb5de" config-ref="rabbitmq" queueName="rides"/>
-		<logger level="INFO" doc:name="Logger" doc:id="28b7c763-ce5b-498d-8f12-4caf59b578e7" message="#[payload]"/>
-	</flow>
+    <!-- AMQP Listener - Rides Queue Consumer -->
+    <flow name="request-ride">
+        <amqp:listener config-ref="rabbitmq" queueName="rides" />
+        <logger level="INFO" message="#['rides-process-async-api - Received message from rides queue: ' ++ (payload.type default 'unknown')]" />
+        <flow-ref name="route-ride-message" />
+        <error-handler>
+            <on-error-continue type="ANY">
+                <logger level="ERROR" message="#['Error processing ride message: ' ++ error.description]" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+
+    <!-- Message routing sub-flow -->
+    <sub-flow name="route-ride-message">
+        <choice>
+            <when expression="#[payload.type == 'NEW_RIDE_REQUEST']">
+                <logger level="INFO" message="Routing to request-ride-process-api" />
+                <http:request config-ref="request-ride-process-api" method="POST" path="/rides">
+                    <http:headers><![CDATA[#[{'Content-Type': 'application/json', 'X-Transaction-Id': uuid()}]]]></http:headers>
+                </http:request>
+            </when>
+            <when expression="#[payload.type == 'RIDE_FEEDBACK']">
+                <logger level="INFO" message="Routing to database-system-api for feedback" />
+                <http:request config-ref="database-system-api" method="POST" path="#['/ride/' ++ (payload.rideId default '') ++ '/feedback']">
+                    <http:headers><![CDATA[#[{'Content-Type': 'application/json', 'X-Transaction-Id': uuid()}]]]></http:headers>
+                </http:request>
+            </when>
+            <otherwise>
+                <logger level="WARN" message="#['Unknown message type: ' ++ (payload.type default 'null')]" />
+            </otherwise>
+        </choice>
+    </sub-flow>
 </mule>

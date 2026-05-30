@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="routing-test" />
+
+    <munit:test name="route-new-ride-request-test" description="Test routing NEW_RIDE_REQUEST to request-ride-process-api">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="request-ride-process-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[write({"rideId": "ride-123", "status": "NEW"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[{"type": "NEW_RIDE_REQUEST", "userId": "user-123", "pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863"}]' mediaType="application/json" />
+            </munit:set-event>
+            <flow-ref name="route-ride-message" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="route-ride-feedback-test" description="Test routing RIDE_FEEDBACK to database-system-api">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[write({"feedbackId": "fb-123"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[{"type": "RIDE_FEEDBACK", "rideId": "ride-123", "rating": 5, "comment": "Great ride!"}]' mediaType="application/json" />
+            </munit:set-event>
+            <flow-ref name="route-ride-message" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+</mule>
