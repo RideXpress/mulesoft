@@ -51,7 +51,7 @@ output application/json
 {message: "No active pricing configuration found"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['404']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</otherwise>
@@ -66,7 +66,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -108,7 +108,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
@@ -151,7 +151,7 @@ output application/json
 {message: "Database unavailable"}]]></ee:set-payload>
 					</ee:message>
 					<ee:variables>
-						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+						<ee:set-variable variableName="httpStatus"><![CDATA['503']]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
