@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- GET /drivers — List available drivers -->
+	<flow name="get:\drivers:router">
+		<logger level="INFO" message="get:\drivers:router - Listing drivers" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select available drivers">
+			<db:sql><![CDATA[SELECT d.user_id, d.license_number, d.availability_status, d.onboarding_status,
+	d.average_rating, d.total_rides, d.cumulative_balance, d.created_at, d.updated_at,
+	u.first_name, u.last_name, u.email, u.mobile
+FROM ridexpress.drivers d
+JOIN ridexpress.users u ON d.user_id = u.user_id
+WHERE d.availability_status = 'online'
+ORDER BY d.created_at DESC]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	id: $.user_id,
+	firstName: $.first_name,
+	lastName: $.last_name,
+	email: $.email,
+	mobile: $.mobile,
+	licenseNumber: $.license_number,
+	availabilityStatus: $.availability_status,
+	onboardingStatus: $.onboarding_status,
+	averageRating: $.average_rating,
+	totalRides: $.total_rides,
+	cumulativeBalance: $.cumulative_balance,
+	createdAt: $.created_at,
+	updatedAt: $.updated_at
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /drivers/{id} — Get driver by ID -->
+	<flow name="get:\drivers\(id):router">
+		<logger level="INFO" message="get:\drivers\(id):router - Getting driver by ID" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select driver by ID">
+			<db:sql><![CDATA[SELECT d.user_id, d.license_number, d.license_expiry, d.license_photo_url, d.insurance_doc_url,
+	d.background_check_id, d.background_check_status, d.onboarding_status, d.availability_status,
+	d.average_rating, d.total_rides, d.cumulative_balance, d.created_at, d.updated_at,
+	u.first_name, u.last_name, u.email, u.mobile, u.user_name
+FROM ridexpress.drivers d
+JOIN ridexpress.users u ON d.user_id = u.user_id
+WHERE d.user_id = CAST(:id AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{id: attributes.uriParams.id}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Check if driver found">
+			<when expression="#[sizeOf(payload) > 0]">
+				<ee:transform doc:name="Map DB result to JSON">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload[0].user_id,
+	userName: payload[0].user_name,
+	firstName: payload[0].first_name,
+	lastName: payload[0].last_name,
+	email: payload[0].email,
+	mobile: payload[0].mobile,
+	licenseNumber: payload[0].license_number,
+	licenseExpiry: payload[0].license_expiry,
+	licensePhotoUrl: payload[0].license_photo_url,
+	insuranceDocUrl: payload[0].insurance_doc_url,
+	backgroundCheckId: payload[0].background_check_id,
+	backgroundCheckStatus: payload[0].background_check_status,
+	onboardingStatus: payload[0].onboarding_status,
+	availabilityStatus: payload[0].availability_status,
+	averageRating: payload[0].average_rating,
+	totalRides: payload[0].total_rides,
+	cumulativeBalance: payload[0].cumulative_balance,
+	createdAt: payload[0].created_at,
+	updatedAt: payload[0].updated_at
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /drivers/{id} — Create driver record -->
+	<flow name="post:\drivers\(id):router">
+		<logger level="INFO" message="post:\drivers\(id):router - Creating driver record" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver">
+			<db:sql><![CDATA[INSERT INTO ridexpress.drivers (user_id, license_number, license_expiry)
+VALUES (CAST(:userId AS UUID), :licenseNumber, CAST(:licenseExpiry AS DATE))]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	licenseNumber: payload.licenseNumber,
+	licenseExpiry: payload.licenseExpiry
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver record created successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:QUERY_EXECUTION" doc:name="Handle constraint error">
+				<ee:transform doc:name="Set 409 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver record already exists or constraint violation"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">409</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- PATCH /drivers/{id} — Update driver record -->
+	<flow name="patch:\drivers\(id):router">
+		<logger level="INFO" message="patch:\drivers\(id):router - Updating driver" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:update config-ref="database-ridexpress-config" doc:name="Update driver by ID">
+			<db:sql><![CDATA[UPDATE ridexpress.drivers SET
+	availability_status = COALESCE(:availabilityStatus, availability_status),
+	onboarding_status = COALESCE(:onboardingStatus, onboarding_status),
+	background_check_id = COALESCE(:backgroundCheckId, background_check_id),
+	background_check_status = COALESCE(:backgroundCheckStatus, background_check_status),
+	license_photo_url = COALESCE(:licensePhotoUrl, license_photo_url),
+	insurance_doc_url = COALESCE(:insuranceDocUrl, insurance_doc_url),
+	average_rating = COALESCE(:averageRating, average_rating),
+	total_rides = COALESCE(:totalRides, total_rides),
+	cumulative_balance = COALESCE(:cumulativeBalance, cumulative_balance),
+	updated_at = CURRENT_TIMESTAMP
+WHERE user_id = CAST(:id AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id: attributes.uriParams.id,
+	availabilityStatus: payload.availabilityStatus default null,
+	onboardingStatus: payload.onboardingStatus default null,
+	backgroundCheckId: payload.backgroundCheckId default null,
+	backgroundCheckStatus: payload.backgroundCheckStatus default null,
+	licensePhotoUrl: payload.licensePhotoUrl default null,
+	insuranceDocUrl: payload.insuranceDocUrl default null,
+	averageRating: payload.averageRating default null,
+	totalRides: payload.totalRides default null,
+	cumulativeBalance: payload.cumulativeBalance default null
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Check if driver updated">
+			<when expression="#[payload > 0]">
+				<ee:transform doc:name="Set 200 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver updated successfully"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /drivers/{id}/vehicles — Register driver vehicle -->
+	<flow name="post:\drivers\(id)\vehicles:router">
+		<logger level="INFO" message="post:\drivers\(id)\vehicles:router - Registering driver vehicle" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver vehicle">
+			<db:sql><![CDATA[INSERT INTO ridexpress.vehicles (user_id, make, model, year, license_plate, insurance_policy, is_active)
+VALUES (CAST(:userId AS UUID), :make, :model, :year, :licensePlate, :insurancePolicy, :isActive)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	make: payload.make,
+	model: payload.model,
+	year: payload.year,
+	licensePlate: payload.licensePlate,
+	insurancePolicy: payload.insurancePolicy,
+	isActive: payload.isActive default false
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Driver vehicle registered successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /drivers/{id}/documents — Upload driver documents -->
+	<flow name="post:\drivers\(id)\documents:router">
+		<logger level="INFO" message="post:\drivers\(id)\documents:router - Uploading driver documents" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver document">
+			<db:sql><![CDATA[INSERT INTO ridexpress.user_attachments (user_id, document_type, file_name, file_path)
+VALUES (CAST(:userId AS UUID), :documentType, :fileName, :filePath)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	documentType: payload.documentType,
+	fileName: payload.fileName,
+	filePath: payload.filePath
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Document uploaded successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /drivers/{id}/banking — Store driver banking info -->
+	<flow name="post:\drivers\(id)\banking:router">
+		<logger level="INFO" message="post:\drivers\(id)\banking:router - Storing driver banking info" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver banking">
+			<db:sql><![CDATA[INSERT INTO ridexpress.driver_banking (user_id, bank_name, account_holder, routing_number, account_token)
+VALUES (CAST(:userId AS UUID), :bankName, :accountHolder, :routingNumber, :accountToken)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	bankName: payload.bankName,
+	accountHolder: payload.accountHolder,
+	routingNumber: payload.routingNumber,
+	accountToken: payload.accountToken
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Banking information stored successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /drivers/payouts/pending — Get drivers eligible for payout -->
+	<flow name="get:\drivers\payouts\pending:router">
+		<logger level="INFO" message="get:\drivers\payouts\pending:router - Getting drivers eligible for payout" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select drivers with pending payouts">
+			<db:sql><![CDATA[SELECT d.user_id, d.cumulative_balance, d.average_rating, d.total_rides,
+	u.first_name, u.last_name, u.email
+FROM ridexpress.drivers d
+JOIN ridexpress.users u ON d.user_id = u.user_id
+WHERE d.cumulative_balance >= 10.00
+ORDER BY d.cumulative_balance DESC]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	id: $.user_id,
+	firstName: $.first_name,
+	lastName: $.last_name,
+	email: $.email,
+	cumulativeBalance: $.cumulative_balance,
+	averageRating: $.average_rating,
+	totalRides: $.total_rides
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

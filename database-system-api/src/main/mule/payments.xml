@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- GET /payments/{ride_id} — Get payment by ride ID -->
+	<flow name="get:\payments\(ride_id):router">
+		<logger level="INFO" message="get:\payments\(ride_id):router - Getting payment by ride ID" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select payment by ride ID">
+			<db:sql><![CDATA[SELECT payment_id, ride_id, square_order_id, amount, currency, status, created_at, updated_at
+FROM ridexpress.payments
+WHERE ride_id = CAST(:rideId AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{rideId: attributes.uriParams.ride_id}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Check if payment found">
+			<when expression="#[sizeOf(payload) > 0]">
+				<ee:transform doc:name="Map DB result to JSON">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	paymentId: payload[0].payment_id,
+	rideId: payload[0].ride_id,
+	squareOrderId: payload[0].square_order_id,
+	amount: payload[0].amount,
+	currency: payload[0].currency,
+	status: payload[0].status,
+	createdAt: payload[0].created_at,
+	updatedAt: payload[0].updated_at
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payment not found for this ride"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- PATCH /payments/{payment_id} — Update payment status -->
+	<flow name="patch:\payments\(payment_id):router">
+		<logger level="INFO" message="patch:\payments\(payment_id):router - Updating payment status" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:update config-ref="database-ridexpress-config" doc:name="Update payment status">
+			<db:sql><![CDATA[UPDATE ridexpress.payments SET
+	status = :status,
+	square_order_id = COALESCE(:squareOrderId, square_order_id),
+	updated_at = CURRENT_TIMESTAMP
+WHERE payment_id = CAST(:paymentId AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	paymentId: attributes.uriParams.payment_id,
+	status: payload.status,
+	squareOrderId: payload.squareOrderId default null
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Check if payment updated">
+			<when expression="#[payload > 0]">
+				<ee:transform doc:name="Set 200 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payment status updated successfully"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payment not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

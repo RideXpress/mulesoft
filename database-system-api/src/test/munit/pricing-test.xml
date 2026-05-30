@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+	<munit:config name="pricing-test" />
+
+	<!-- GET /pricing — Get pricing configuration -->
+	<munit:test name="get-pricing-test" description="Test GET /pricing - retrieves active pricing">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"pricing_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "base_fare": 2.50, "per_mile_rate": 1.25, "per_minute_rate": 0.20, "minimum_fare": 5.00, "booking_fee": 1.50, "is_active": true, "effective_from": "2024-01-01", "created_at": "2024-01-01"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\pricing:router" doc:name="Call get:\pricing:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /pricing/surge — Get surge zones -->
+	<munit:test name="get-pricing-surge-test" description="Test GET /pricing/surge - retrieves surge zones">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"zone_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "zone_name": "Downtown SF", "surge_multiplier": 1.50, "demand_count": 50, "supply_count": 20, "last_calculated_at": "2024-01-01", "created_at": "2024-01-01"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\pricing\surge:router" doc:name="Call get:\pricing\surge:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+	<!-- GET /ride-types — Get ride types -->
+	<munit:test name="get-ride-types-test" description="Test GET /ride-types - retrieves available ride types">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock DB select" processor="db:select">
+				<munit-tools:then-return>
+					<munit-tools:payload value='#[[{"ride_type_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "name": "ECONOMY", "description": "Affordable everyday rides", "price_multiplier": 1.00, "min_vehicle_year": null, "is_active": true, "created_at": "2024-01-01"}]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event">
+				<munit:attributes value="#[{headers: {}, queryParams: {}}]" />
+			</munit:set-event>
+			<flow-ref name="get:\ride-types:router" doc:name="Call get:\ride-types:router" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert payload not null" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+</mule>

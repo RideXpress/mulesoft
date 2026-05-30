@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- POST /users — Create a new user -->
+	<flow name="post:\users:router">
+		<logger level="INFO" message="post:\users:router - Creating new user" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert user">
+			<db:sql><![CDATA[INSERT INTO ridexpress.users (user_name, email, mobile, first_name, middle_name, last_name, user_type, address, driver_license)
+VALUES (:userName, :email, :mobile, :firstName, :middleName, :lastName, :userType, :address, :driverLicense)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userName: payload.userName,
+	email: payload.email,
+	mobile: payload.mobile default null,
+	firstName: payload.firstName,
+	middleName: payload.middleName default null,
+	lastName: payload.lastName,
+	userType: payload.userType default 'PASSENGER',
+	address: payload.address default null,
+	driverLicense: payload.driverLicense default null
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: (payload.userName default "User") ++ " user created successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:QUERY_EXECUTION" doc:name="Handle duplicate / constraint error">
+				<ee:transform doc:name="Set 409 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User already exists or constraint violation: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">409</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /users — List all users -->
+	<flow name="get:\users:router">
+		<logger level="INFO" message="get:\users:router - Listing users" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select all users">
+			<db:sql><![CDATA[SELECT user_id, user_name, email, mobile, first_name, middle_name, last_name, user_type, address, driver_license, is_active, created_at, updated_at
+FROM ridexpress.users
+ORDER BY created_at DESC]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	id: $.user_id,
+	userName: $.user_name,
+	email: $.email,
+	mobile: $.mobile,
+	firstName: $.first_name,
+	middleName: $.middle_name,
+	lastName: $.last_name,
+	userType: $.user_type,
+	address: $.address,
+	driverLicense: $.driver_license,
+	isActive: $.is_active,
+	createdAt: $.created_at,
+	updatedAt: $.updated_at
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /users/{id} — Get user by ID -->
+	<flow name="get:\users\(id):router">
+		<logger level="INFO" message="get:\users\(id):router - Getting user by ID" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select user by ID">
+			<db:sql><![CDATA[SELECT user_id, user_name, email, mobile, first_name, middle_name, last_name, user_type, address, driver_license, is_active, created_at, updated_at
+FROM ridexpress.users
+WHERE user_id = CAST(:id AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{id: attributes.uriParams.id}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Check if user found">
+			<when expression="#[sizeOf(payload) > 0]">
+				<ee:transform doc:name="Map DB result to JSON">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload[0].user_id,
+	userName: payload[0].user_name,
+	email: payload[0].email,
+	mobile: payload[0].mobile,
+	firstName: payload[0].first_name,
+	middleName: payload[0].middle_name,
+	lastName: payload[0].last_name,
+	userType: payload[0].user_type,
+	address: payload[0].address,
+	driverLicense: payload[0].driver_license,
+	isActive: payload[0].is_active,
+	createdAt: payload[0].created_at,
+	updatedAt: payload[0].updated_at
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- PATCH /users/{id} — Update user by ID -->
+	<flow name="patch:\users\(id):router">
+		<logger level="INFO" message="patch:\users\(id):router - Updating user" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:update config-ref="database-ridexpress-config" doc:name="Update user by ID">
+			<db:sql><![CDATA[UPDATE ridexpress.users SET
+	email = COALESCE(:email, email),
+	mobile = COALESCE(:mobile, mobile),
+	first_name = COALESCE(:firstName, first_name),
+	middle_name = COALESCE(:middleName, middle_name),
+	last_name = COALESCE(:lastName, last_name),
+	address = COALESCE(:address, address),
+	driver_license = COALESCE(:driverLicense, driver_license),
+	updated_at = CURRENT_TIMESTAMP
+WHERE user_id = CAST(:id AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id: attributes.uriParams.id,
+	email: payload.email default null,
+	mobile: payload.mobile default null,
+	firstName: payload.firstName default null,
+	middleName: payload.middleName default null,
+	lastName: payload.lastName default null,
+	address: payload.address default null,
+	driverLicense: payload.driverLicense default null
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Check if user updated">
+			<when expression="#[payload > 0]">
+				<ee:transform doc:name="Set 200 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User updated successfully"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /users/{id}/location — Get user's latest location -->
+	<flow name="get:\users\(id)\location:router">
+		<logger level="INFO" message="get:\users\(id)\location:router - Getting user location" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select latest user location">
+			<db:sql><![CDATA[SELECT latitude, longitude, created_at
+FROM ridexpress.user_locations
+WHERE user_id = CAST(:id AS UUID)
+ORDER BY created_at DESC
+LIMIT 1]]></db:sql>
+			<db:input-parameters><![CDATA[#[{id: attributes.uriParams.id}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Check if location found">
+			<when expression="#[sizeOf(payload) > 0]">
+				<ee:transform doc:name="Map DB result to JSON">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	long: payload[0].longitude,
+	lat: payload[0].latitude
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Location not found for user"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /users/{id}/location — Post user's real-time location -->
+	<flow name="post:\users\(id)\location:router">
+		<logger level="INFO" message="post:\users\(id)\location:router - Posting user location" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert user location">
+			<db:sql><![CDATA[INSERT INTO ridexpress.user_locations (user_id, latitude, longitude)
+VALUES (CAST(:userId AS UUID), :latitude, :longitude)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	latitude: payload.lat,
+	longitude: payload.long
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Location recorded successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /users/{id}/feedback — Submit feedback for a user -->
+	<flow name="post:\users\(id)\feedback:router">
+		<logger level="INFO" message="post:\users\(id)\feedback:router - Submitting user feedback" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert user feedback">
+			<db:sql><![CDATA[INSERT INTO ridexpress.ride_feedback (ride_id, user_id, rating, comment)
+VALUES (CAST(:rideId AS UUID), CAST(:userId AS UUID), :rating, :comment)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	rideId: payload.rideId default null,
+	userId: attributes.uriParams.id,
+	rating: payload.rating,
+	comment: payload.comment default null
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Feedback processed successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

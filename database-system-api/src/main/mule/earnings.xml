@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- POST /drivers/{id}/earnings — Record driver earnings -->
+	<flow name="post:\drivers\(id)\earnings:router">
+		<logger level="INFO" message="post:\drivers\(id)\earnings:router - Recording driver earnings" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver earnings">
+			<db:sql><![CDATA[INSERT INTO ridexpress.driver_earnings (user_id, ride_id, gross_fare, platform_commission, tip_amount, cancellation_portion, deductions, net_earnings)
+VALUES (CAST(:userId AS UUID), CAST(:rideId AS UUID), :grossFare, :platformCommission, :tipAmount, :cancellationPortion, :deductions, :netEarnings)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	rideId: payload.rideId,
+	grossFare: payload.grossFare,
+	platformCommission: payload.platformCommission,
+	tipAmount: payload.tipAmount default 0.00,
+	cancellationPortion: payload.cancellationPortion default 0.00,
+	deductions: payload.deductions default 0.00,
+	netEarnings: payload.netEarnings
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Earnings recorded successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /drivers/{id}/earnings — Get driver earnings history -->
+	<flow name="get:\drivers\(id)\earnings:router">
+		<logger level="INFO" message="get:\drivers\(id)\earnings:router - Getting driver earnings" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select driver earnings">
+			<db:sql><![CDATA[SELECT earning_id, user_id, ride_id, gross_fare, platform_commission, tip_amount, cancellation_portion, deductions, net_earnings, created_at
+FROM ridexpress.driver_earnings
+WHERE user_id = CAST(:userId AS UUID)
+ORDER BY created_at DESC]]></db:sql>
+			<db:input-parameters><![CDATA[#[{userId: attributes.uriParams.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	earningId: $.earning_id,
+	userId: $.user_id,
+	rideId: $.ride_id,
+	grossFare: $.gross_fare,
+	platformCommission: $.platform_commission,
+	tipAmount: $.tip_amount,
+	cancellationPortion: $.cancellation_portion,
+	deductions: $.deductions,
+	netEarnings: $.net_earnings,
+	createdAt: $.created_at
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /drivers/{id}/payouts — Create driver payout -->
+	<flow name="post:\drivers\(id)\payouts:router">
+		<logger level="INFO" message="post:\drivers\(id)\payouts:router - Creating driver payout" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert driver payout">
+			<db:sql><![CDATA[INSERT INTO ridexpress.driver_payouts (user_id, square_payout_id, amount, currency, payout_period)
+VALUES (CAST(:userId AS UUID), :squarePayoutId, :amount, :currency, CAST(:payoutPeriod AS DATE))]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	squarePayoutId: payload.squarePayoutId default null,
+	amount: payload.amount,
+	currency: payload.currency default 'USD',
+	payoutPeriod: payload.payoutPeriod
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payout created successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- PATCH /drivers/{id}/payouts/{payoutId} — Update payout status -->
+	<flow name="patch:\drivers\(id)\payouts\(payoutId):router">
+		<logger level="INFO" message="patch:\drivers\(id)\payouts\(payoutId):router - Updating payout status" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:update config-ref="database-ridexpress-config" doc:name="Update payout status">
+			<db:sql><![CDATA[UPDATE ridexpress.driver_payouts SET
+	status = :status,
+	square_payout_id = COALESCE(:squarePayoutId, square_payout_id),
+	updated_at = CURRENT_TIMESTAMP
+WHERE payout_id = CAST(:payoutId AS UUID) AND user_id = CAST(:userId AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	payoutId: attributes.uriParams.payoutId,
+	userId: attributes.uriParams.id,
+	status: payload.status,
+	squarePayoutId: payload.squarePayoutId default null
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Check if payout updated">
+			<when expression="#[payload > 0]">
+				<ee:transform doc:name="Set 200 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payout status updated successfully"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Payout not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

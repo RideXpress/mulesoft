@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+		http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- Configuration Properties -->
+	<configuration-properties doc:name="Configuration properties" file="config.properties" />
+	<configuration-properties doc:name="Secret properties" file="${secrets.path}" />
+
+	<!-- HTTP Listener -->
+	<http:listener-config name="http-listener-config" doc:name="HTTP Listener config">
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+
+	<!-- APIKit Router -->
+	<apikit:config name="router" api="api/db-system-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+
+	<!-- PostgreSQL Database Connection -->
+	<db:config name="database-ridexpress-config" doc:name="Database Config">
+		<db:generic-connection url="jdbc:postgresql://${postgres.hostname}:${postgres.port}/${postgres.service}" driverClassName="org.postgresql.Driver" user="${postgres.username}" password="${postgres.password}" />
+	</db:config>
+
+</mule>

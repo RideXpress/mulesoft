@@ -1,0 +1,22 @@
+{
+  "userName": "focadiz",
+  "email": "felipe@ridexpress.io",
+  "mobile": "4153435678",
+  "firstName": "Felipe",
+  "middleName": "Test",
+  "lastName": "Ocadiz",
+  "userType": "DRIVER",
+  "address": "",
+  "zipCode": "",
+  "driverLicense": "",
+  "vehicles": [
+    {
+      "make": "Ford",
+      "model": "Focus",
+      "year": 2012,
+      "licensePlate": "8PSQ3456",
+      "insurancePolicy": "ABC123456",
+      "isActive": "true"
+    }
+  ]
+}
