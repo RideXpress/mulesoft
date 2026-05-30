@@ -69,6 +69,10 @@ jobs:
           </settings>
           EOSETTINGS
 
-      - name: Run MUnit Tests
+      - name: Run MUnit Tests Experience API
         working-directory: ridexpress-experience-api
+        run: mvn -B --no-transfer-progress test
+
+      - name: Run MUnit Tests Database API
+        working-directory: database-system-api
         run: mvn -B --no-transfer-progress test
