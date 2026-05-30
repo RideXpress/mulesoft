@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- POST /rides — Create a new ride -->
+	<flow name="post:\rides:router">
+		<logger level="INFO" message="post:\rides:router - Creating new ride" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert ride" autoGenerateKeys="true">
+			<db:sql><![CDATA[INSERT INTO ridexpress.rides (user_id, pickup_location, destination, destination_name, status)
+VALUES (CAST(:userId AS UUID), :pickupLocation, :destination, :destinationName, 'NEW')
+RETURNING ride_id, status, created_at]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: payload.userId default null,
+	pickupLocation: payload.pickupLocation,
+	destination: payload.destination,
+	destinationName: payload.destinationName default null
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload[0].ride_id default null,
+	status: "NEW"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:QUERY_EXECUTION" doc:name="Handle constraint error">
+				<ee:transform doc:name="Set 400 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Invalid request: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">400</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /ride/{id} — Get ride by ID -->
+	<flow name="get:\ride\(id):router">
+		<logger level="INFO" message="get:\ride\(id):router - Getting ride by ID" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select ride by ID">
+			<db:sql><![CDATA[SELECT ride_id, user_id, driver_id, status, rate, pickup_location, destination, destination_name, start_location, end_location, created_at, updated_at
+FROM ridexpress.rides
+WHERE ride_id = CAST(:id AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{id: attributes.uriParams.id}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Check if ride found">
+			<when expression="#[sizeOf(payload) > 0]">
+				<ee:transform doc:name="Map DB result to JSON">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload[0].ride_id,
+	rate: payload[0].rate,
+	pickupLocation: payload[0].pickup_location,
+	destination: payload[0].destination,
+	destinationName: payload[0].destination_name,
+	status: payload[0].status,
+	createdDate: payload[0].created_at,
+	lastModifiedDate: payload[0].updated_at
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- PATCH /ride/{id} — Update a ride -->
+	<flow name="patch:\ride\(id):router">
+		<logger level="INFO" message="patch:\ride\(id):router - Updating ride" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:update config-ref="database-ridexpress-config" doc:name="Update ride by ID">
+			<db:sql><![CDATA[UPDATE ridexpress.rides SET
+	status = COALESCE(:status, status),
+	rate = COALESCE(:rate, rate),
+	driver_id = COALESCE(CAST(:driverId AS UUID), driver_id),
+	start_location = COALESCE(:startLocation, start_location),
+	end_location = COALESCE(:endLocation, end_location),
+	updated_at = CURRENT_TIMESTAMP
+WHERE ride_id = CAST(:id AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id: attributes.uriParams.id,
+	status: payload.status default null,
+	rate: payload.rate default null,
+	driverId: payload.driverId default null,
+	startLocation: payload.startLocation default null,
+	endLocation: payload.endLocation default null
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Check if ride updated">
+			<when expression="#[payload > 0]">
+				<ee:transform doc:name="Set 200 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride updated successfully"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Ride not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /ride/{id}/feedback — Submit ride feedback -->
+	<flow name="post:\ride\(id)\feedback:router">
+		<logger level="INFO" message="post:\ride\(id)\feedback:router - Submitting ride feedback" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert ride feedback">
+			<db:sql><![CDATA[INSERT INTO ridexpress.ride_feedback (ride_id, user_id, rating, comment)
+VALUES (CAST(:rideId AS UUID), CAST(:userId AS UUID), :rating, :comment)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	rideId: attributes.uriParams.id,
+	userId: payload.userId default null,
+	rating: payload.rating,
+	comment: payload.comment default null
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Feedback processed successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

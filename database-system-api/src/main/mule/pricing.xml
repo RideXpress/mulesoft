@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- GET /pricing — Get current pricing configuration -->
+	<flow name="get:\pricing:router">
+		<logger level="INFO" message="get:\pricing:router - Getting pricing configuration" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select active pricing">
+			<db:sql><![CDATA[SELECT pricing_id, base_fare, per_mile_rate, per_minute_rate, minimum_fare, booking_fee, is_active, effective_from, created_at
+FROM ridexpress.pricing
+WHERE is_active = true
+ORDER BY effective_from DESC
+LIMIT 1]]></db:sql>
+		</db:select>
+		<choice doc:name="Check if pricing found">
+			<when expression="#[sizeOf(payload) > 0]">
+				<ee:transform doc:name="Map DB result to JSON">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	pricingId: payload[0].pricing_id,
+	baseFare: payload[0].base_fare,
+	perMileRate: payload[0].per_mile_rate,
+	perMinuteRate: payload[0].per_minute_rate,
+	minimumFare: payload[0].minimum_fare,
+	bookingFee: payload[0].booking_fee,
+	isActive: payload[0].is_active,
+	effectiveFrom: payload[0].effective_from,
+	createdAt: payload[0].created_at
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "No active pricing configuration found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /pricing/surge — Get surge zone pricing -->
+	<flow name="get:\pricing\surge:router">
+		<logger level="INFO" message="get:\pricing\surge:router - Getting surge zone pricing" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select surge zones">
+			<db:sql><![CDATA[SELECT zone_id, zone_name, surge_multiplier, demand_count, supply_count, last_calculated_at, created_at
+FROM ridexpress.surge_zones
+ORDER BY surge_multiplier DESC]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	zoneId: $.zone_id,
+	zoneName: $.zone_name,
+	surgeMultiplier: $.surge_multiplier,
+	demandCount: $.demand_count,
+	supplyCount: $.supply_count,
+	lastCalculatedAt: $.last_calculated_at,
+	createdAt: $.created_at
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- GET /ride-types — Get available ride types -->
+	<flow name="get:\ride-types:router">
+		<logger level="INFO" message="get:\ride-types:router - Getting ride types" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select active ride types">
+			<db:sql><![CDATA[SELECT ride_type_id, name, description, price_multiplier, min_vehicle_year, is_active, created_at
+FROM ridexpress.ride_types
+WHERE is_active = true
+ORDER BY price_multiplier ASC]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	rideTypeId: $.ride_type_id,
+	name: $.name,
+	description: $.description,
+	priceMultiplier: $.price_multiplier,
+	minVehicleYear: $.min_vehicle_year,
+	isActive: $.is_active,
+	createdAt: $.created_at
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>

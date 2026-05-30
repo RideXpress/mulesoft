@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+		http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+	<!-- GET /users/{id}/vehicles — Get user's vehicles -->
+	<flow name="get:\users\(id)\vehicles:router">
+		<logger level="INFO" message="get:\users\(id)\vehicles:router - Getting user vehicles" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:select config-ref="database-ridexpress-config" doc:name="Select vehicles by user ID">
+			<db:sql><![CDATA[SELECT vehicle_id, user_id, make, model, year, license_plate, insurance_policy, is_active, created_at, updated_at
+FROM ridexpress.vehicles
+WHERE user_id = CAST(:userId AS UUID)
+ORDER BY created_at DESC]]></db:sql>
+			<db:input-parameters><![CDATA[#[{userId: attributes.uriParams.id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Map DB result to JSON">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	id: $.vehicle_id,
+	make: $.make,
+	model: $.model,
+	year: $.year,
+	licensePlate: $.license_plate,
+	insurancePolicy: $.insurance_policy,
+	isActive: $.is_active,
+	createdDate: $.created_at,
+	lastModifiedDate: $.updated_at
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- POST /users/{id}/vehicles — Add a vehicle for a user -->
+	<flow name="post:\users\(id)\vehicles:router">
+		<logger level="INFO" message="post:\users\(id)\vehicles:router - Adding vehicle" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:insert config-ref="database-ridexpress-config" doc:name="Insert vehicle">
+			<db:sql><![CDATA[INSERT INTO ridexpress.vehicles (user_id, make, model, year, license_plate, insurance_policy, is_active)
+VALUES (CAST(:userId AS UUID), :make, :model, :year, :licensePlate, :insurancePolicy, :isActive)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	userId: attributes.uriParams.id,
+	make: payload.make,
+	model: payload.model,
+	year: payload.year,
+	licensePlate: payload.licensePlate,
+	insurancePolicy: payload.insurancePolicy,
+	isActive: payload.isActive default false
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Set 201 response">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Vehicle added successfully"}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus">201</ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate type="DB:QUERY_EXECUTION" doc:name="Handle constraint error">
+				<ee:transform doc:name="Set 400 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Invalid request: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">400</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+	<!-- PUT /users/{id}/vehicles/{vehicleId} — Update a vehicle -->
+	<flow name="put:\users\(id)\vehicles\(vehicleId):router">
+		<logger level="INFO" message="put:\users\(id)\vehicles\(vehicleId):router - Updating vehicle" />
+		<set-variable variableName="correlationId" value="#[attributes.headers.'X-Transaction-Id' default correlationId]" />
+		<db:update config-ref="database-ridexpress-config" doc:name="Update vehicle">
+			<db:sql><![CDATA[UPDATE ridexpress.vehicles SET
+	make = COALESCE(:make, make),
+	model = COALESCE(:model, model),
+	year = COALESCE(:year, year),
+	license_plate = COALESCE(:licensePlate, license_plate),
+	insurance_policy = COALESCE(:insurancePolicy, insurance_policy),
+	is_active = COALESCE(:isActive, is_active),
+	updated_at = CURRENT_TIMESTAMP
+WHERE vehicle_id = CAST(:vehicleId AS UUID) AND user_id = CAST(:userId AS UUID)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	vehicleId: attributes.uriParams.vehicleId,
+	userId: attributes.uriParams.id,
+	make: payload.make default null,
+	model: payload.model default null,
+	year: payload.year default null,
+	licensePlate: payload.licensePlate default null,
+	insurancePolicy: payload.insurancePolicy default null,
+	isActive: payload.isActive default null
+}]]]></db:input-parameters>
+		</db:update>
+		<choice doc:name="Check if vehicle updated">
+			<when expression="#[payload > 0]">
+				<ee:transform doc:name="Set 200 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Vehicle updated successfully"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set 404 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Vehicle not found"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">404</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler>
+			<on-error-propagate type="DB:CONNECTIVITY" doc:name="Handle DB connectivity error">
+				<ee:transform doc:name="Set 503 response">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Database unavailable"}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus">503</ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+
+</mule>
