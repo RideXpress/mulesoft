@@ -10,7 +10,7 @@
 
     <!-- POST /api/payment-link - Create payment link -->
     <flow name="post-payment-link-flow">
-        <http:listener config-ref="http-listener-config" path="/api/payment-link" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/payment-link" allowedMethods="POST" />
         <logger level="INFO" message="post-payment-link-flow - Creating payment link" />
         <set-variable variableName="linkPayload" value="#[payload]" />
         <ee:transform>
@@ -66,7 +66,7 @@ output application/json
 
     <!-- GET /api/orders/{orderId} - Get order -->
     <flow name="get-orders-flow">
-        <http:listener config-ref="http-listener-config" path="/api/orders/{orderId}" method="GET" />
+        <http:listener config-ref="http-listener-config" path="/api/orders/{orderId}" allowedMethods="GET" />
         <logger level="INFO" message="get-orders-flow - Getting order" />
         <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]" />
         <http:request config-ref="square-request-config" method="GET" path="#['/orders/' ++ vars.orderId]">
@@ -88,7 +88,7 @@ output application/json
 
     <!-- PUT /api/orders/{orderId} - Update order -->
     <flow name="put-orders-flow">
-        <http:listener config-ref="http-listener-config" path="/api/orders/{orderId}" method="PUT" />
+        <http:listener config-ref="http-listener-config" path="/api/orders/{orderId}" allowedMethods="PUT" />
         <logger level="INFO" message="put-orders-flow - Updating order" />
         <set-variable variableName="orderId" value="#[attributes.uriParams.orderId]" />
         <set-variable variableName="orderPayload" value="#[payload]" />
@@ -125,7 +125,7 @@ output application/json
 
     <!-- POST /api/customers - Create customer -->
     <flow name="post-customers-flow">
-        <http:listener config-ref="http-listener-config" path="/api/customers" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/customers" allowedMethods="POST" />
         <logger level="INFO" message="post-customers-flow - Creating Square customer" />
         <http:request config-ref="square-request-config" method="POST" path="/customers">
             <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken'), 'Content-Type': 'application/json'}]]]></http:headers>
@@ -146,7 +146,7 @@ output application/json
 
     <!-- POST /api/payouts - Initiate driver payout -->
     <flow name="post-payouts-flow">
-        <http:listener config-ref="http-listener-config" path="/api/payouts" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/payouts" allowedMethods="POST" />
         <logger level="INFO" message="post-payouts-flow - Initiating payout" />
         <http:request config-ref="square-request-config" method="POST" path="/payouts">
             <http:headers><![CDATA[#[{'Authorization': 'Bearer ' ++ p('square.accessToken'), 'Content-Type': 'application/json'}]]]></http:headers>
