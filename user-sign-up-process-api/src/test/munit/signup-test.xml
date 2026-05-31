@@ -17,7 +17,7 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"userId": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "email": "test@ridexpress.io"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"userId": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "email": "test@ridexpress.io"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -26,7 +26,7 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="okta-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"id": "okta123", "status": "ACTIVE"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"id": "okta123", "status": "ACTIVE"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -35,14 +35,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="email-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"status": "sent"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"status": "sent"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"email": "test@ridexpress.io", "firstName": "Test", "lastName": "User", "userName": "testuser", "userType": "PASSENGER"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"email": "test@ridexpress.io", "firstName": "Test", "lastName": "User", "userName": "testuser", "userType": "PASSENGER"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/signup', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-signup-flow" />
@@ -59,14 +59,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="okta-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"sessionToken": "abc123", "status": "SUCCESS"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"sessionToken": "abc123", "status": "SUCCESS"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"username": "test@ridexpress.io", "password": "Pass123!"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"username": "test@ridexpress.io", "password": "Pass123!"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/auth/authenticate', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-auth-authenticate-flow" />
@@ -83,14 +83,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"vehicleId": "v123", "make": "Toyota"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"vehicleId": "v123", "make": "Toyota"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"make": "Toyota", "model": "Camry", "year": 2022, "licensePlate": "ABC123"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"make": "Toyota", "model": "Camry", "year": 2022, "licensePlate": "ABC123"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, uriParams: {id: 'driver-123'}, requestUri: '/api/drivers/driver-123/vehicle', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-drivers-vehicle-flow" />
@@ -107,14 +107,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"bankingId": "b123"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"bankingId": "b123"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"bankName": "Chase", "accountHolder": "John Doe", "routingNumber": "021000021"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"bankName": "Chase", "accountHolder": "John Doe", "routingNumber": "021000021"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, uriParams: {id: 'driver-123'}, requestUri: '/api/drivers/driver-123/banking', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-drivers-banking-flow" />
