@@ -14,14 +14,14 @@
         <munit:behavior>
             <munit-tools:mock-when processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"id": "okta-user-123", "status": "ACTIVE", "profile": {"email": "test@ridexpress.io"}}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"id": "okta-user-123", "status": "ACTIVE", "profile": {"email": "test@ridexpress.io"}}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"email": "test@ridexpress.io", "firstName": "Test", "lastName": "User"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"email": "test@ridexpress.io", "firstName": "Test", "lastName": "User"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/users', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-users-flow" />
@@ -35,14 +35,14 @@
         <munit:behavior>
             <munit-tools:mock-when processor="http:request">
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"sessionToken": "session-abc", "status": "SUCCESS"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"sessionToken": "session-abc", "status": "SUCCESS"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"username": "test@ridexpress.io", "password": "Pass123!"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"username": "test@ridexpress.io", "password": "Pass123!"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {}, requestUri: '/api/authn', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-authn-flow" />

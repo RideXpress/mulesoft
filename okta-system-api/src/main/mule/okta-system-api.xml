@@ -10,7 +10,7 @@
 
     <!-- POST /api/users - Create Okta user -->
     <flow name="post-users-flow">
-        <http:listener config-ref="http-listener-config" path="/api/users" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/users" allowedMethods="POST" />
         <logger level="INFO" message="post-users-flow - Creating Okta user" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <ee:transform>
@@ -51,7 +51,7 @@ output application/json
 
     <!-- POST /api/authn - Authenticate user -->
     <flow name="post-authn-flow">
-        <http:listener config-ref="http-listener-config" path="/api/authn" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/authn" allowedMethods="POST" />
         <logger level="INFO" message="post-authn-flow - Authenticating user" />
         <http:request config-ref="okta-request-config" method="POST" path="/authn">
             <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
@@ -72,7 +72,7 @@ output application/json
 
     <!-- POST /api/token/refresh - Refresh token -->
     <flow name="post-token-refresh-flow">
-        <http:listener config-ref="http-listener-config" path="/api/token/refresh" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/token/refresh" allowedMethods="POST" />
         <logger level="INFO" message="post-token-refresh-flow - Refreshing token" />
         <http:request config-ref="okta-request-config" method="POST" path="/token">
             <http:headers><![CDATA[#[{'Content-Type': 'application/x-www-form-urlencoded'}]]]></http:headers>
@@ -93,7 +93,7 @@ output application/json
 
     <!-- POST /api/users/{email}/reset-password -->
     <flow name="post-users-reset-password-flow">
-        <http:listener config-ref="http-listener-config" path="/api/users/{email}/reset-password" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/users/{email}/reset-password" allowedMethods="POST" />
         <logger level="INFO" message="post-users-reset-password-flow - Resetting password" />
         <set-variable variableName="email" value="#[attributes.uriParams.email]" />
         <http:request config-ref="okta-request-config" method="POST" path="#['/users/' ++ vars.email ++ '/lifecycle/reset_password']">
