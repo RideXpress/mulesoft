@@ -10,7 +10,7 @@
 
     <!-- POST /api/cancel - Cancel ride with charge/refund evaluation -->
     <flow name="post-cancel-flow">
-        <http:listener config-ref="http-listener-config" path="/api/cancel" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/cancel" allowedMethods="POST" />
         <logger level="INFO" message="post-cancel-flow - Cancelling ride" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="cancelPayload" value="#[payload]" />
