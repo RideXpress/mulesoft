@@ -17,7 +17,7 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="google-maps-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"distanceMiles": 5.2, "durationMinutes": 15, "estimatedFare": 12.50}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"distanceMiles": 5.2, "durationMinutes": 15, "estimatedFare": 12.50}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -26,7 +26,7 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"rideId": "ride-123", "status": "NEW"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"rideId": "ride-123", "status": "NEW"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -35,14 +35,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="square-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"orderId": "order-123", "url": "https://square.link/pay"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"orderId": "order-123", "url": "https://square.link/pay"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"userId": "user-123", "pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863", "destinationName": "San Jose"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"userId": "user-123", "pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863", "destinationName": "San Jose"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/rides', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-rides-flow" />
@@ -59,7 +59,7 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="google-maps-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"distanceMiles": 8.0, "durationMinutes": 20}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"distanceMiles": 8.0, "durationMinutes": 20}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
@@ -68,14 +68,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"baseFare": 2.50, "perMileRate": 1.25, "perMinuteRate": 0.20, "minimumFare": 5.00, "bookingFee": 1.50}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"baseFare": 2.50, "perMileRate": 1.25, "perMinuteRate": 0.20, "minimumFare": 5.00, "bookingFee": 1.50}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863", "rideType": "ECONOMY"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863", "rideType": "ECONOMY"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/pricing/calculate', method: 'POST'}]" />
             </munit:set-event>
             <flow-ref name="post-pricing-calculate-flow" />
@@ -93,14 +93,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"rideId": "ride-123", "status": "ACCEPTED_BY_DRIVER"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"rideId": "ride-123", "status": "ACCEPTED_BY_DRIVER"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 200}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"status": "ACCEPTED_BY_DRIVER"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"status": "ACCEPTED_BY_DRIVER"}]' mediaType="application/json" />
                 <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, uriParams: {id: 'ride-123'}, requestUri: '/api/rides/ride-123', method: 'PATCH'}]" />
             </munit:set-event>
             <flow-ref name="patch-rides-flow" />
