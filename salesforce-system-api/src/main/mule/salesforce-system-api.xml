@@ -9,7 +9,7 @@
         http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
     <flow name="post-contacts-flow">
-        <http:listener config-ref="http-listener-config" path="/api/contacts" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/contacts" allowedMethods="POST" />
         <logger level="INFO" message="post-contacts-flow - Creating Salesforce contact" />
         <http:request config-ref="salesforce-request-config" method="POST" path="/sobjects/Contact">
             <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
@@ -29,7 +29,7 @@ output application/json
     </flow>
 
     <flow name="post-cases-flow">
-        <http:listener config-ref="http-listener-config" path="/api/cases" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/cases" allowedMethods="POST" />
         <logger level="INFO" message="post-cases-flow - Creating Salesforce case" />
         <http:request config-ref="salesforce-request-config" method="POST" path="/sobjects/Case">
             <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
@@ -49,7 +49,7 @@ output application/json
     </flow>
 
     <flow name="post-rides-flow">
-        <http:listener config-ref="http-listener-config" path="/api/rides" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/rides" allowedMethods="POST" />
         <logger level="INFO" message="post-rides-flow - Syncing ride to Salesforce" />
         <http:request config-ref="salesforce-request-config" method="POST" path="/sobjects/Ride__c">
             <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
