@@ -14,7 +14,7 @@
     <!-- AMQP Listener - Rides Queue Consumer -->
     <flow name="request-ride">
         <amqp:listener config-ref="rabbitmq" queueName="rides" />
-        <logger level="INFO" message="#['rides-process-async-api - Received message from rides queue: ' ++ (payload.type default 'unknown')]" />
+        <logger level="INFO" message="#['rides-process-async-api - Received message from rides queue: ' ++ (payload.'type' default 'unknown')]" />
         <flow-ref name="route-ride-message" />
         <error-handler>
             <on-error-continue type="ANY">
@@ -26,20 +26,20 @@
     <!-- Message routing sub-flow -->
     <sub-flow name="route-ride-message">
         <choice>
-            <when expression="#[payload.type == 'NEW_RIDE_REQUEST']">
+            <when expression="#[payload.'type' == 'NEW_RIDE_REQUEST']">
                 <logger level="INFO" message="Routing to request-ride-process-api" />
                 <http:request config-ref="request-ride-process-api" method="POST" path="/rides">
                     <http:headers><![CDATA[#[{'Content-Type': 'application/json', 'X-Transaction-Id': uuid()}]]]></http:headers>
                 </http:request>
             </when>
-            <when expression="#[payload.type == 'RIDE_FEEDBACK']">
+            <when expression="#[payload.'type' == 'RIDE_FEEDBACK']">
                 <logger level="INFO" message="Routing to database-system-api for feedback" />
                 <http:request config-ref="database-system-api" method="POST" path="#['/ride/' ++ (payload.rideId default '') ++ '/feedback']">
                     <http:headers><![CDATA[#[{'Content-Type': 'application/json', 'X-Transaction-Id': uuid()}]]]></http:headers>
                 </http:request>
             </when>
             <otherwise>
-                <logger level="WARN" message="#['Unknown message type: ' ++ (payload.type default 'null')]" />
+                <logger level="WARN" message="#['Unknown message type: ' ++ (payload.'type' default 'null')]" />
             </otherwise>
         </choice>
     </sub-flow>

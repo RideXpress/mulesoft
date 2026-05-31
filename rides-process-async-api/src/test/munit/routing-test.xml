@@ -17,14 +17,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="request-ride-process-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"rideId": "ride-123", "status": "NEW"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"rideId": "ride-123", "status": "NEW"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"type": "NEW_RIDE_REQUEST", "userId": "user-123", "pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"type": "NEW_RIDE_REQUEST", "userId": "user-123", "pickupLocation": "37.7749,-122.4194", "destination": "37.3382,-121.8863"}]' mediaType="application/json" />
             </munit:set-event>
             <flow-ref name="route-ride-message" />
         </munit:execution>
@@ -40,14 +40,14 @@
                     <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
                 </munit-tools:with-attributes>
                 <munit-tools:then-return>
-                    <munit-tools:payload value='#[write({"feedbackId": "fb-123"}, "application/json")]' mediaType="application/json" />
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"feedbackId": "fb-123"}]' mediaType="application/json" />
                     <munit-tools:attributes value="#[{statusCode: 201}]" />
                 </munit-tools:then-return>
             </munit-tools:mock-when>
         </munit:behavior>
         <munit:execution>
             <munit:set-event>
-                <munit:payload value='#[{"type": "RIDE_FEEDBACK", "rideId": "ride-123", "rating": 5, "comment": "Great ride!"}]' mediaType="application/json" />
+                <munit:payload value='#[%dw 2.0 output application/json --- {"type": "RIDE_FEEDBACK", "rideId": "ride-123", "rating": 5, "comment": "Great ride!"}]' mediaType="application/json" />
             </munit:set-event>
             <flow-ref name="route-ride-message" />
         </munit:execution>
