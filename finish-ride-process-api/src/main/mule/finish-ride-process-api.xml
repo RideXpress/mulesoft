@@ -10,7 +10,7 @@
 
     <!-- POST /api/finish - Complete ride and trigger payment -->
     <flow name="post-finish-flow">
-        <http:listener config-ref="http-listener-config" path="/api/finish" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/finish" allowedMethods="POST" />
         <logger level="INFO" message="post-finish-flow - Finishing ride" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="finishPayload" value="#[payload]" />
