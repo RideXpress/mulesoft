@@ -9,7 +9,7 @@
         http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
     <flow name="post-send-flow">
-        <http:listener config-ref="http-listener-config" path="/api/send" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/send" allowedMethods="POST" />
         <logger level="INFO" message="#['post-send-flow - Sending email to: ' ++ (payload.to default 'unknown')]" />
         <ee:transform>
             <ee:message>
