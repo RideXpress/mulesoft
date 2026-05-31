@@ -10,7 +10,7 @@
 
     <!-- PATCH /api/drivers/{id}/status - Toggle driver online/offline -->
     <flow name="patch-drivers-status-flow">
-        <http:listener config-ref="http-listener-config" path="/api/drivers/{id}/status" method="PATCH" />
+        <http:listener config-ref="http-listener-config" path="/api/drivers/{id}/status" allowedMethods="PATCH" />
         <logger level="INFO" message="patch-drivers-status-flow - Updating driver availability" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="driverId" value="#[attributes.uriParams.id]" />
