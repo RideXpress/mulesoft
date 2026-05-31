@@ -10,7 +10,7 @@
 
     <!-- GET /api/status - Get waiting/ETA status -->
     <flow name="get-status-flow">
-        <http:listener config-ref="http-listener-config" path="/api/status" method="GET" />
+        <http:listener config-ref="http-listener-config" path="/api/status" allowedMethods="GET" />
         <logger level="INFO" message="get-status-flow - Getting ride waiting status" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="rideId" value="#[attributes.queryParams.rideId]" />
@@ -34,7 +34,7 @@ output application/json
 
     <!-- PUT /api/arrived - Driver signals arrival -->
     <flow name="put-arrived-flow">
-        <http:listener config-ref="http-listener-config" path="/api/arrived" method="PUT" />
+        <http:listener config-ref="http-listener-config" path="/api/arrived" allowedMethods="PUT" />
         <logger level="INFO" message="put-arrived-flow - Driver arrived at pickup" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="arrivalPayload" value="#[payload]" />
