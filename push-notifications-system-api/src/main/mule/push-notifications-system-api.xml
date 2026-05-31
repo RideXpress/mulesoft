@@ -9,7 +9,7 @@
         http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
     <flow name="post-notify-flow">
-        <http:listener config-ref="http-listener-config" path="/api/notify" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/notify" allowedMethods="POST" />
         <logger level="INFO" message="#['post-notify-flow - Sending notification to user: ' ++ (payload.userId default 'unknown')]" />
         <ee:transform>
             <ee:message>
