@@ -11,7 +11,7 @@
 
     <!-- POST /api/rides - Create ride orchestration -->
     <flow name="post-rides-flow">
-        <http:listener config-ref="http-listener-config" path="/api/rides" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/rides" allowedMethods="POST" />
         <logger level="INFO" message="post-rides-flow - Orchestrating ride request" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="rideRequest" value="#[payload]" />
@@ -94,7 +94,7 @@ output application/json
 
     <!-- POST /api/pricing/calculate - Fare estimation -->
     <flow name="post-pricing-calculate-flow">
-        <http:listener config-ref="http-listener-config" path="/api/pricing/calculate" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/pricing/calculate" allowedMethods="POST" />
         <logger level="INFO" message="post-pricing-calculate-flow - Calculating fare estimate" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="estimateRequest" value="#[payload]" />
@@ -170,7 +170,7 @@ output application/json
 
     <!-- PATCH /api/rides/{id} - Update ride status -->
     <flow name="patch-rides-flow">
-        <http:listener config-ref="http-listener-config" path="/api/rides/{id}" method="PATCH" />
+        <http:listener config-ref="http-listener-config" path="/api/rides/{id}" allowedMethods="PATCH" />
         <logger level="INFO" message="patch-rides-flow - Updating ride status" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="rideId" value="#[attributes.uriParams.id]" />

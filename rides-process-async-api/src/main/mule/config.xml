@@ -11,7 +11,11 @@
     <configuration-properties file="config.properties" />
     <configuration-properties file="${secrets.path}" />
     <amqp:config name="rabbitmq">
-        <amqp:connection host="${rabbitmq.hostname}" port="${rabbitmq.port}" virtualHost="${rabbitmq.virtualhost}" username="${rabbitmq.username}" password="${rabbitmq.password}" />
+        <amqp:connection host="${rabbitmq.hostname}" port="${rabbitmq.port}" virtualHost="${rabbitmq.virtualhost}" username="${rabbitmq.username}" password="${rabbitmq.password}" >
+            <reconnection>
+                <reconnect-forever />
+            </reconnection>
+        </amqp:connection>
     </amqp:config>
     <http:request-config name="request-ride-process-api" basePath="/api">
         <http:request-connection host="${request-ride-process-api.hostname}" port="${request-ride-process-api.port}" />

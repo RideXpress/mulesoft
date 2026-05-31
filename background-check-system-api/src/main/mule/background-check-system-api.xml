@@ -10,7 +10,7 @@
 
     <!-- POST /api/checks - Initiate background check (mocked) -->
     <flow name="post-checks-flow">
-        <http:listener config-ref="http-listener-config" path="/api/checks" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/checks" allowedMethods="POST" />
         <logger level="INFO" message="post-checks-flow - Initiating background check (mocked)" />
         <ee:transform>
             <ee:message>
@@ -29,7 +29,7 @@ output application/json
 
     <!-- GET /api/checks/{id} - Get background check status (mocked) -->
     <flow name="get-checks-flow">
-        <http:listener config-ref="http-listener-config" path="/api/checks/{id}" method="GET" />
+        <http:listener config-ref="http-listener-config" path="/api/checks/{id}" allowedMethods="GET" />
         <logger level="INFO" message="get-checks-flow - Getting background check status (mocked)" />
         <ee:transform>
             <ee:message>

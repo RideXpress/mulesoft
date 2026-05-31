@@ -27,7 +27,11 @@
 
 	<!-- PostgreSQL Database Connection -->
 	<db:config name="database-ridexpress-config" doc:name="Database Config">
-		<db:generic-connection url="jdbc:postgresql://${postgres.hostname}:${postgres.port}/${postgres.service}" driverClassName="org.postgresql.Driver" user="${postgres.username}" password="${postgres.password}" />
+		<db:generic-connection url="jdbc:postgresql://${postgres.hostname}:${postgres.port}/${postgres.service}" driverClassName="org.postgresql.Driver" user="${postgres.username}" password="${postgres.password}">
+			<reconnection>
+				<reconnect-forever />
+			</reconnection>
+		</db:generic-connection>
 	</db:config>
 
 </mule>

@@ -11,7 +11,7 @@
 
     <!-- POST /api/accept - Driver accepts a ride -->
     <flow name="post-accept-flow">
-        <http:listener config-ref="http-listener-config" path="/api/accept" method="POST" />
+        <http:listener config-ref="http-listener-config" path="/api/accept" allowedMethods="POST" />
         <logger level="INFO" message="post-accept-flow - Driver accepting ride" />
         <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
         <set-variable variableName="acceptPayload" value="#[payload]" />
