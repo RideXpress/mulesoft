@@ -2,7 +2,7 @@ name: MUnit Tests
 
 on:
   push:
-    branches: [ main, develop, 'feature/**' ]
+    branches: [ main, develop, 'feature/**', 'fix/**' ]
   pull_request:
     branches: [ main, develop ]
 
@@ -27,15 +27,41 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('ridexpress-experience-api/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Configure Maven settings
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mkdir -p ~/.m2
-          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+          cat > ~/.m2/settings.xml << EOSETTINGS
+          <?xml version="1.0" encoding="UTF-8"?>
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>anypoint-exchange-v3</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+              <server>
+                <id>mulesoft-releases</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+              <server>
+                <id>mulesoft-enterprise-repository</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOSETTINGS
       - name: Run MUnit Tests
         working-directory: ridexpress-experience-api
         run: mvn clean test -Dsecrets.path=test-secrets.properties
-        env:
-          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
-          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
 
   test-database-system-api:
     name: "MUnit: database-system-api"
@@ -54,15 +80,41 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('database-system-api/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Configure Maven settings
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mkdir -p ~/.m2
-          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+          cat > ~/.m2/settings.xml << EOSETTINGS
+          <?xml version="1.0" encoding="UTF-8"?>
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>anypoint-exchange-v3</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+              <server>
+                <id>mulesoft-releases</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+              <server>
+                <id>mulesoft-enterprise-repository</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOSETTINGS
       - name: Run MUnit Tests
         working-directory: database-system-api
         run: mvn clean test -Dsecrets.path=test-secrets.properties
-        env:
-          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
-          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
 
   test-rides-process-async-api:
     name: "MUnit: rides-process-async-api"
@@ -81,15 +133,41 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('rides-process-async-api/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Configure Maven settings
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mkdir -p ~/.m2
-          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+          cat > ~/.m2/settings.xml << EOSETTINGS
+          <?xml version="1.0" encoding="UTF-8"?>
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>anypoint-exchange-v3</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+              <server>
+                <id>mulesoft-releases</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+              <server>
+                <id>mulesoft-enterprise-repository</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOSETTINGS
       - name: Run MUnit Tests
         working-directory: rides-process-async-api
         run: mvn clean test -Dsecrets.path=test-secrets.properties
-        env:
-          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
-          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
 
   test-process-apis:
     name: "MUnit: Process APIs"
@@ -118,15 +196,41 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles(format('{0}/pom.xml', matrix.api)) }}
           restore-keys: ${{ runner.os }}-m2
       - name: Configure Maven settings
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mkdir -p ~/.m2
-          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+          cat > ~/.m2/settings.xml << EOSETTINGS
+          <?xml version="1.0" encoding="UTF-8"?>
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>anypoint-exchange-v3</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+              <server>
+                <id>mulesoft-releases</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+              <server>
+                <id>mulesoft-enterprise-repository</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOSETTINGS
       - name: Run MUnit Tests
         working-directory: ${{ matrix.api }}
         run: mvn clean test -Dsecrets.path=test-secrets.properties
-        env:
-          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
-          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
 
   test-system-apis:
     name: "MUnit: System APIs"
@@ -155,12 +259,38 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles(format('{0}/pom.xml', matrix.api)) }}
           restore-keys: ${{ runner.os }}-m2
       - name: Configure Maven settings
+        env:
+          ANYPOINT_CLIENT_ID: ${{ secrets.ANYPOINT_CLIENT_ID }}
+          ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mkdir -p ~/.m2
-          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+          cat > ~/.m2/settings.xml << EOSETTINGS
+          <?xml version="1.0" encoding="UTF-8"?>
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>anypoint-exchange-v3</id>
+                <username>~~~Client~~~</username>
+                <password>${ANYPOINT_CLIENT_ID}~?~${ANYPOINT_CLIENT_SECRET}</password>
+              </server>
+              <server>
+                <id>mulesoft-releases</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+              <server>
+                <id>mulesoft-enterprise-repository</id>
+                <username>${NEXUS_USERNAME}</username>
+                <password>${NEXUS_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOSETTINGS
       - name: Run MUnit Tests
         working-directory: ${{ matrix.api }}
         run: mvn clean test -Dsecrets.path=test-secrets.properties
-        env:
-          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
-          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
