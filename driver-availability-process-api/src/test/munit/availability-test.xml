@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="availability-test" />
+
+    <munit:test name="patch-drivers-status-flow-success-test" description="Test PATCH /api/drivers/{id}/status - success scenario">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"driverId": "driver-456", "availabilityStatus": "online"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[%dw 2.0 output application/json --- {"status": "online"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, uriParams: {id: 'driver-456'}, requestUri: '/api/drivers/driver-456/status', method: 'PATCH'}]" />
+            </munit:set-event>
+            <flow-ref name="patch-drivers-status-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+</mule>

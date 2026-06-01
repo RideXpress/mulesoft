@@ -1,0 +1,166 @@
+name: MUnit Tests
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  test-ridexpress-experience-api:
+    name: "MUnit: ridexpress-experience-api"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('ridexpress-experience-api/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+      - name: Run MUnit Tests
+        working-directory: ridexpress-experience-api
+        run: mvn clean test -Dsecrets.path=test-secrets.properties
+        env:
+          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
+          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
+
+  test-database-system-api:
+    name: "MUnit: database-system-api"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('database-system-api/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+      - name: Run MUnit Tests
+        working-directory: database-system-api
+        run: mvn clean test -Dsecrets.path=test-secrets.properties
+        env:
+          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
+          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
+
+  test-rides-process-async-api:
+    name: "MUnit: rides-process-async-api"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('rides-process-async-api/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+      - name: Run MUnit Tests
+        working-directory: rides-process-async-api
+        run: mvn clean test -Dsecrets.path=test-secrets.properties
+        env:
+          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
+          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
+
+  test-process-apis:
+    name: "MUnit: Process APIs"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api:
+          - user-sign-up-process-api
+          - request-ride-process-api
+          - accept-ride-process-api
+          - waiting-ride-process-api
+          - finish-ride-process-api
+          - cancel-ride-process-api
+          - driver-availability-process-api
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles(format('{0}/pom.xml', matrix.api)) }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+      - name: Run MUnit Tests
+        working-directory: ${{ matrix.api }}
+        run: mvn clean test -Dsecrets.path=test-secrets.properties
+        env:
+          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
+          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}
+
+  test-system-apis:
+    name: "MUnit: System APIs"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api:
+          - okta-system-api
+          - google-maps-system-api
+          - square-system-api
+          - salesforce-system-api
+          - email-system-api
+          - push-notifications-system-api
+          - background-check-system-api
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles(format('{0}/pom.xml', matrix.api)) }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Configure Maven settings
+        run: |
+          mkdir -p ~/.m2
+          cp util/settings.xml ~/.m2/settings.xml 2>/dev/null || true
+      - name: Run MUnit Tests
+        working-directory: ${{ matrix.api }}
+        run: mvn clean test -Dsecrets.path=test-secrets.properties
+        env:
+          MULE_EE_USERNAME: ${{ secrets.MULE_EE_USERNAME }}
+          MULE_EE_PASSWORD: ${{ secrets.MULE_EE_PASSWORD }}

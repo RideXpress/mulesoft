@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/users - Create Okta user -->
+    <flow name="post-users-flow">
+        <http:listener config-ref="http-listener-config" path="/api/users" allowedMethods="POST" />
+        <logger level="INFO" message="post-users-flow - Creating Okta user" />
+        <set-variable variableName="transactionId" value="#[attributes.headers.'X-Transaction-Id' default uuid()]" />
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var userInput = payload
+---
+{
+    profile: {
+        firstName: userInput.firstName,
+        lastName: userInput.lastName,
+        email: userInput.email,
+        login: userInput.email
+    },
+    credentials: {
+        password: {value: userInput.password default "TempPass123!"}
+    }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <http:request config-ref="okta-request-config" method="POST" path="/users">
+            <http:headers><![CDATA[#[{'Authorization': 'SSWS ' ++ p('okta.apiToken'), 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Okta user creation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/authn - Authenticate user -->
+    <flow name="post-authn-flow">
+        <http:listener config-ref="http-listener-config" path="/api/authn" allowedMethods="POST" />
+        <logger level="INFO" message="post-authn-flow - Authenticating user" />
+        <http:request config-ref="okta-request-config" method="POST" path="/authn">
+            <http:headers><![CDATA[#[{'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:UNAUTHORIZED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Authentication failed: invalid credentials"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/token/refresh - Refresh token -->
+    <flow name="post-token-refresh-flow">
+        <http:listener config-ref="http-listener-config" path="/api/token/refresh" allowedMethods="POST" />
+        <logger level="INFO" message="post-token-refresh-flow - Refreshing token" />
+        <http:request config-ref="okta-request-config" method="POST" path="/token">
+            <http:headers><![CDATA[#[{'Content-Type': 'application/x-www-form-urlencoded'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:UNAUTHORIZED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Token refresh failed: invalid or expired refresh token"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- POST /api/users/{email}/reset-password -->
+    <flow name="post-users-reset-password-flow">
+        <http:listener config-ref="http-listener-config" path="/api/users/{email}/reset-password" allowedMethods="POST" />
+        <logger level="INFO" message="post-users-reset-password-flow - Resetting password" />
+        <set-variable variableName="email" value="#[attributes.uriParams.email]" />
+        <http:request config-ref="okta-request-config" method="POST" path="#['/users/' ++ vars.email ++ '/lifecycle/reset_password']">
+            <http:headers><![CDATA[#[{'Authorization': 'SSWS ' ++ p('okta.apiToken'), 'Content-Type': 'application/json'}]]]></http:headers>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="HTTP:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "User not found in Okta"}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

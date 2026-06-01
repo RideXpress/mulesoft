@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
 
-<mule xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd">
-	<configuration-properties doc:name="Configuration properties" doc:id="febb5efa-fc67-462c-a3bb-1ef836a1e841" file="config.properties" />
-	<configuration-properties doc:name="Configuration properties" doc:id="33a25d45-e497-45d4-b86e-e458934e31be" file="${secrets.path}" />
-	<amqp:config name="rabbitmq" doc:name="AMQP Config" doc:id="5a70b296-6c62-4152-95e1-ba0a7dff6d68" >
-		<amqp:connection host="${rabbitmq.hostname}" port="${rabbitmq.port}" virtualHost="${rabbitmq.virtualhost}" username="${rabbitmq.username}" password="${rabbitmq.password}" />
-	</amqp:config>
+    <configuration-properties file="config.properties" />
+    <configuration-properties file="${secrets.path}" />
+    <amqp:config name="rabbitmq">
+        <amqp:connection host="${rabbitmq.hostname}" port="${rabbitmq.port}" virtualHost="${rabbitmq.virtualhost}" username="${rabbitmq.username}" password="${rabbitmq.password}" >
+            <reconnection>
+                <reconnect-forever />
+            </reconnection>
+        </amqp:connection>
+    </amqp:config>
+    <http:request-config name="request-ride-process-api" basePath="/api">
+        <http:request-connection host="${request-ride-process-api.hostname}" port="${request-ride-process-api.port}" />
+    </http:request-config>
+    <http:request-config name="database-system-api" basePath="/api">
+        <http:request-connection host="${database-system-api.hostname}" port="${database-system-api.port}" />
+    </http:request-config>
 </mule>

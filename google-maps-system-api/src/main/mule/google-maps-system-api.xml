@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/geolocation - Calculate route distance and duration -->
+    <flow name="post-geolocation-flow">
+        <http:listener config-ref="http-listener-config" path="/api/geolocation" allowedMethods="POST" />
+        <logger level="INFO" message="post-geolocation-flow - Calculating route" />
+        <set-variable variableName="geoPayload" value="#[payload]" />
+        <http:request config-ref="google-maps-request-config" method="GET" path="/distancematrix/json">
+            <http:query-params><![CDATA[#[{origins: vars.geoPayload.origin, destinations: vars.geoPayload.destination, key: p('googlemaps.apiKey')}]]]></http:query-params>
+        </http:request>
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var element = payload.rows[0].elements[0] default {}
+---
+{
+    distanceMiles: (element.distance.value default 8000) / 1609.34,
+    durationMinutes: (element.duration.value default 900) / 60,
+    estimatedFare: ((element.distance.value default 8000) / 1609.34) * 1.25 + 2.50
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Geolocation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- GET /api/directions - Get route directions -->
+    <flow name="get-directions-flow">
+        <http:listener config-ref="http-listener-config" path="/api/directions" allowedMethods="GET" />
+        <logger level="INFO" message="get-directions-flow - Getting directions" />
+        <http:request config-ref="google-maps-request-config" method="GET" path="/directions/json">
+            <http:query-params><![CDATA[#[{origin: attributes.queryParams.origin, destination: attributes.queryParams.destination, key: p('googlemaps.apiKey')}]]]></http:query-params>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Directions request failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- GET /api/distance - Distance matrix -->
+    <flow name="get-distance-flow">
+        <http:listener config-ref="http-listener-config" path="/api/distance" allowedMethods="GET" />
+        <logger level="INFO" message="get-distance-flow - Calculating distance" />
+        <http:request config-ref="google-maps-request-config" method="GET" path="/distancematrix/json">
+            <http:query-params><![CDATA[#[{origins: attributes.queryParams.origin, destinations: attributes.queryParams.destination, key: p('googlemaps.apiKey')}]]]></http:query-params>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Distance calculation failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+
+    <!-- GET /api/places - Search locations -->
+    <flow name="get-places-flow">
+        <http:listener config-ref="http-listener-config" path="/api/places" allowedMethods="GET" />
+        <logger level="INFO" message="get-places-flow - Searching places" />
+        <http:request config-ref="google-maps-request-config" method="GET" path="/place/textsearch/json">
+            <http:query-params><![CDATA[#[{query: attributes.queryParams.query, key: p('googlemaps.apiKey')}]]]></http:query-params>
+        </http:request>
+        <error-handler>
+            <on-error-propagate type="ANY">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Places search failed: " ++ (error.description default "unknown error")}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+</mule>

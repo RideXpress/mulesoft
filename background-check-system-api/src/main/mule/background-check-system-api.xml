@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <!-- POST /api/checks - Initiate background check (mocked) -->
+    <flow name="post-checks-flow">
+        <http:listener config-ref="http-listener-config" path="/api/checks" allowedMethods="POST" />
+        <logger level="INFO" message="post-checks-flow - Initiating background check (mocked)" />
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    checkId: uuid(),
+    driverId: payload.driverId,
+    status: "pending",
+    createdAt: now() as String {format: "yyyy-MM-dd'T'HH:mm:ss'Z'"}
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+
+    <!-- GET /api/checks/{id} - Get background check status (mocked) -->
+    <flow name="get-checks-flow">
+        <http:listener config-ref="http-listener-config" path="/api/checks/{id}" allowedMethods="GET" />
+        <logger level="INFO" message="get-checks-flow - Getting background check status (mocked)" />
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    checkId: attributes.uriParams.id,
+    status: "approved",
+    completedAt: now() as String {format: "yyyy-MM-dd'T'HH:mm:ss'Z'"}
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>
