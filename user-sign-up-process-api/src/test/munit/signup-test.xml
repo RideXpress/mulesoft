@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="signup-test" />
+
+    <munit:test name="post-signup-success-test" description="Test POST /api/signup - successful user sign-up">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"userId": "e58ed763-928c-4155-bee9-fdbaaadc15f3", "email": "test@ridexpress.io"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="okta-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"id": "okta123", "status": "ACTIVE"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="email-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"status": "sent"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[%dw 2.0 output application/json --- {"email": "test@ridexpress.io", "firstName": "Test", "lastName": "User", "userName": "testuser", "userType": "PASSENGER"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/signup', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-signup-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-auth-authenticate-success-test" description="Test POST /api/auth/authenticate - successful login">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="okta-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"sessionToken": "abc123", "status": "SUCCESS"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[%dw 2.0 output application/json --- {"username": "test@ridexpress.io", "password": "Pass123!"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, requestUri: '/api/auth/authenticate', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-auth-authenticate-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-drivers-vehicle-success-test" description="Test POST /api/drivers/{id}/vehicle - register vehicle">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"vehicleId": "v123", "make": "Toyota"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[%dw 2.0 output application/json --- {"make": "Toyota", "model": "Camry", "year": 2022, "licensePlate": "ABC123"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, uriParams: {id: 'driver-123'}, requestUri: '/api/drivers/driver-123/vehicle', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-drivers-vehicle-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="post-drivers-banking-success-test" description="Test POST /api/drivers/{id}/banking - register banking">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:with-attributes>
+                    <munit-tools:with-attribute attributeName="config-ref" whereValue="database-system-api" />
+                </munit-tools:with-attributes>
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"bankingId": "b123"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 201}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[%dw 2.0 output application/json --- {"bankName": "Chase", "accountHolder": "John Doe", "routingNumber": "021000021"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {'X-Transaction-Id': '12345'}, uriParams: {id: 'driver-123'}, requestUri: '/api/drivers/driver-123/banking', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-drivers-banking-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+</mule>

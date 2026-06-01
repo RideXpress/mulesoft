@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+    xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+
+    <munit:config name="geolocation-test" />
+
+    <munit:test name="post-geolocation-test" description="Test POST /api/geolocation - calculate route">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"rows": [{"elements": [{"distance": {"value": 8000}, "duration": {"value": 900}}]}]}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:payload value='#[%dw 2.0 output application/json --- {"origin": "37.7749,-122.4194", "destination": "37.3382,-121.8863"}]' mediaType="application/json" />
+                <munit:attributes value="#[{headers: {}, requestUri: '/api/geolocation', method: 'POST'}]" />
+            </munit:set-event>
+            <flow-ref name="post-geolocation-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload.distanceMiles]" is="#[MunitTools::notNullValue()]" />
+            <munit-tools:assert-that expression="#[payload.durationMinutes]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <munit:test name="get-directions-test" description="Test GET /api/directions">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"routes": [{"legs": [{"distance": {"text": "5 mi"}}]}]}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:attributes value="#[{headers: {}, queryParams: {origin: '37.7749,-122.4194', destination: '37.3382,-121.8863'}, requestUri: '/api/directions', method: 'GET'}]" />
+            </munit:set-event>
+            <flow-ref name="get-directions-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+</mule>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns="http://www.mulesoft.org/schema/mule/core"
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <http:listener-config name="http-listener-config">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <http:request-config name="database-system-api" basePath="/api">
+        <http:request-connection host="${database-system-api.hostname}" port="${database-system-api.port}" />
+    </http:request-config>
+    <http:request-config name="okta-system-api" basePath="/api">
+        <http:request-connection host="${okta-system-api.hostname}" port="${okta-system-api.port}" />
+    </http:request-config>
+    <http:request-config name="email-system-api" basePath="/api">
+        <http:request-connection host="${email-system-api.hostname}" port="${email-system-api.port}" />
+    </http:request-config>
+    <http:request-config name="square-system-api" basePath="/api">
+        <http:request-connection host="${square-system-api.hostname}" port="${square-system-api.port}" />
+    </http:request-config>
+    <http:request-config name="background-check-system-api" basePath="/api">
+        <http:request-connection host="${background-check-system-api.hostname}" port="${background-check-system-api.port}" />
+    </http:request-config>
+    <configuration-properties file="config.properties" />
+    <configuration-properties file="${secrets.path}" />
+</mule>
