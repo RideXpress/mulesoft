@@ -13,14 +13,11 @@ http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amq
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
     <apikit:config name="router" api="api/ridexpress-experience-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-	<http:request-config name="google-maps" doc:name="HTTP Request configuration" doc:id="1f06e185-89ae-4000-9b3f-58ad57727d6b" basePath="/maps/api">
-		<http:request-connection host="${googlemaps.hostname}" port="${googlemaps.port}" protocol="HTTPS" />
+	<http:request-config name="google-maps-system-api" doc:name="Google Maps System API" doc:id="b2c3d4e5-f6a7-8901-bcde-f01234567891" basePath="/api">
+		<http:request-connection host="${google-maps-system-api.hostname}" port="${google-maps-system-api.port}" />
 	</http:request-config>
-	<http:request-config name="okta" doc:name="HTTP Request configuration" doc:id="1d47e8c8-7e57-42da-b194-e30faeae752b" basePath="/api/v1">
-		<http:request-connection host="${okta.hostname}" port="${okta.port}" protocol="HTTPS" />
-	</http:request-config>
-	<http:request-config name="square" doc:name="HTTP Request configuration" doc:id="0cad353e-f9fa-4595-bebc-7edc7eb518d8" basePath="/v2">
-		<http:request-connection host="${square.hostname}" port="${square.port}" protocol="HTTPS" />
+	<http:request-config name="square-system-api" doc:name="Square System API" doc:id="c3d4e5f6-a7b8-9012-cdef-012345678912" basePath="/api">
+		<http:request-connection host="${square-system-api.hostname}" port="${square-system-api.port}" />
 	</http:request-config>
 	<http:request-config name="database-system-api" doc:name="Database System API" doc:id="a1b2c3d4-e5f6-7890-abcd-ef1234567891" basePath="/api">
 		<http:request-connection host="${database-system-api.hostname}" port="${database-system-api.port}" />
