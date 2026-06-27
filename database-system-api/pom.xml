@@ -11,6 +11,27 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mule.maven.plugin.version>4.7.0</mule.maven.plugin.version>
         <munit.version>3.7.0</munit.version>
+
+        <!-- ===== CloudHub 2.0 Deployment ===== -->
+        <!-- Deployment target configuration -->
+        <ch2.environment>${env.ENVIRONMENT}</ch2.environment>
+        <ch2.target>Cloudhub-US-East-2</ch2.target>
+        <ch2.mule.version>4.8.0</ch2.mule.version>
+        <ch2.replicas>1</ch2.replicas>
+        <ch2.replica.size>0.1</ch2.replica.size>
+        <ch2.app.name>${project.artifactId}</ch2.app.name>
+
+        <!-- Anypoint Platform credentials — set via CI/CD environment variables -->
+        <anypoint.username>${env.ANYPOINT_USERNAME}</anypoint.username>
+        <anypoint.password>${env.ANYPOINT_PASSWORD}</anypoint.password>
+
+        <!-- PostgreSQL — sourced from environment variables -->
+        <app.postgres.hostname>${env.POSTGRES_HOSTNAME}</app.postgres.hostname>
+        <app.postgres.port>${env.POSTGRES_PORT}</app.postgres.port>
+        <app.postgres.service>${env.POSTGRES_SERVICE}</app.postgres.service>
+        <app.postgres.username>${env.POSTGRES_USERNAME}</app.postgres.username>
+        <!-- Secure: passed as a CloudHub secure property, never stored in plain text -->
+        <app.postgres.password>${env.POSTGRES_PASSWORD}</app.postgres.password>
     </properties>
     <build>
         <plugins>
@@ -24,6 +45,31 @@
                 <artifactId>mule-maven-plugin</artifactId>
                 <version>${mule.maven.plugin.version}</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <cloudhub2Deployment>
+                        <uri>https://anypoint.mulesoft.com</uri>
+                        <provider>MC</provider>
+                        <environment>${ch2.environment}</environment>
+                        <target>${ch2.target}</target>
+                        <muleVersion>${ch2.mule.version}</muleVersion>
+                        <username>${anypoint.username}</username>
+                        <password>${anypoint.password}</password>
+                        <applicationName>${ch2.app.name}</applicationName>
+                        <replicas>${ch2.replicas}</replicas>
+                        <replicaSize>${ch2.replica.size}</replicaSize>
+                        <!-- Plain application properties -->
+                        <properties>
+                            <ext.postgres.hostname>${app.postgres.hostname}</ext.postgres.hostname>
+                            <ext.postgres.port>${app.postgres.port}</ext.postgres.port>
+                            <ext.postgres.service>${app.postgres.service}</ext.postgres.service>
+                            <ext.postgres.username>${app.postgres.username}</ext.postgres.username>
+                        </properties>
+                        <!-- Secure properties — encrypted at rest in CloudHub -->
+                        <secureProperties>
+                            <ext.postgres.password>${app.postgres.password}</ext.postgres.password>
+                        </secureProperties>
+                    </cloudhub2Deployment>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.mulesoft.munit.tools</groupId>
