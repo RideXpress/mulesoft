@@ -40,4 +40,4 @@ jobs:
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
         run: |
           cd ${{ steps.detect_project.outputs.project }}
-          mvn deploy -DmuleDeploy
+          mvn deploy -Pcloudhub2-deploy -DmuleDeploy
