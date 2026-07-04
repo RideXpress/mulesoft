@@ -15,13 +15,6 @@ jobs:
         with:
           fetch-depth: 2  # Required so HEAD~1 exists for the git diff
 
-      - name: Detect changed API project
-        id: detect_project
-        run: |
-          CHANGED_PROJECT=$(git diff --dirstat=files,0 HEAD~1 --name-only | awk -F/ '{print $1}' | uniq)
-          echo "Changed project: $CHANGED_PROJECT"
-          echo "project=$CHANGED_PROJECT" >> $GITHUB_OUTPUT
-
       - name: Install Java 17
         uses: actions/setup-java@v4
         with:
@@ -39,5 +32,19 @@ jobs:
           ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
         run: |
-          cd ${{ steps.detect_project.outputs.project }}
-          mvn deploy -Pcloudhub2-deploy -DmuleDeploy
+          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
+          for ARTIFACT in $ARTIFACTS
+            do
+              case $ARTIFACT in
+                .github | util | docs | pom.xml | README.md)
+                echo "---"
+                ;;
+              *)
+                if [[ -d $ARTIFACT ]]; then
+                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT
+                  echo "---"
+                fi
+                ;;
+              esac
+            done
+          
