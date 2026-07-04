@@ -1,0 +1,43 @@
+name: Deploy to Runtime Manager
+run-name: Deploy triggered by ${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Required so HEAD~1 exists for the git diff
+
+      - name: Detect changed API project
+        id: detect_project
+        run: |
+          CHANGED_PROJECT=$(git diff --dirstat=files,0 HEAD~1 --name-only | awk -F/ '{print $1}' | uniq)
+          echo "Changed project: $CHANGED_PROJECT"
+          echo "project=$CHANGED_PROJECT" >> $GITHUB_OUTPUT
+
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Install Maven 3.9.8
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '3.9.8'
+
+      - name: Deploy to Runtime Manager
+        env:
+          ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
+          ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
+          ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
+        run: |
+          cd ${{ steps.detect_project.outputs.project }}
+          mvn deploy -Pcloudhub2-deploy -DmuleDeploy

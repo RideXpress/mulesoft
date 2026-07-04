@@ -19,7 +19,7 @@
 
 	<!-- HTTP Listener -->
 	<http:listener-config name="http-listener-config" doc:name="HTTP Listener config">
-		<http:listener-connection host="0.0.0.0" port="8082" />
+		<http:listener-connection host="0.0.0.0" port="${http.private.port}" />
 	</http:listener-config>
 
 	<!-- APIKit Router -->
