@@ -32,7 +32,7 @@ jobs:
           ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
         run: |
-          ARTIFACTS=$(git diff --dirstat=files,0 HEAD~1 --name-only | awk -F/ '{print $1}' | uniq)
+          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
           for ARTIFACT in $ARTIFACTS
             do
               case $ARTIFACT in
@@ -41,8 +41,6 @@ jobs:
                 ;;
               *)
                 if [[ -d $ARTIFACT ]]; then
-                  //ARTIFACT_ID=$(./mvnw $ARGS org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout -f ${ARTIFACT_DIRECTORY}/pom.xml)
-                  //ARTIFACT_VERSION=$(./mvnw $ARGS org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout -f ${ARTIFACT_DIRECTORY}/pom.xml)
                   mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT
                   echo "---"
                 fi
