@@ -156,6 +156,7 @@
             </build>
         </profile>
     </profiles>
+
     <dependencies>
         <dependency>
             <groupId>org.mule.modules</groupId>
