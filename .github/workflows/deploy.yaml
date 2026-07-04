@@ -18,7 +18,7 @@ jobs:
       - name: Detect changed API project
         id: detect_project
         run: |
-          CHANGED_PROJECT=$(git diff --dirstat=files,0 HEAD~1 --name-only | awk -F/ '{print $1}' | uniq)
+          CHANGED_PROJECT=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u | grep -v '^\.' | head -1)
           echo "Changed project: $CHANGED_PROJECT"
           echo "project=$CHANGED_PROJECT" >> $GITHUB_OUTPUT
 
