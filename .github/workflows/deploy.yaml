@@ -67,6 +67,14 @@ jobs:
           ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
         run: |
+          # Validate required environment variables
+          if [[ -z "$ANYPOINT_USERNAME" || -z "$ANYPOINT_PASSWORD" || -z "$ENVIRONMENT" ]]; then
+            echo "ERROR: Missing required environment variables"
+            echo "ANYPOINT_USERNAME: ${ANYPOINT_USERNAME:-(not set)}"
+            echo "ANYPOINT_PASSWORD: ${ANYPOINT_PASSWORD:-(not set)}"
+            echo "ENVIRONMENT: ${ENVIRONMENT:-(not set)}"
+          fi
+
           ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
           for ARTIFACT in $ARTIFACTS
             do
@@ -76,7 +84,8 @@ jobs:
                 ;;
               *)
                 if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT
+                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT \
+                  -Denv="$ENVIRONMENT"
                   echo "---"
                 fi
                 ;;
