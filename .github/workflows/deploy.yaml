@@ -63,9 +63,9 @@ jobs:
 
       - name: Deploy to Runtime Manager
         env:
-          ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_CLIENT_ID }}
-          ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
-          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
+          ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
+          ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
         run: |
           ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
           for ARTIFACT in $ARTIFACTS
@@ -76,10 +76,9 @@ jobs:
                 ;;
               *)
                 if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT -Denv=develop 
+                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT
                   echo "---"
                 fi
                 ;;
               esac
             done
-          
