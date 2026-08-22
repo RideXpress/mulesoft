@@ -135,8 +135,7 @@
                                 <environment>${ch2.environment}</environment>
                                 <target>${ch2.target}</target>
                                 <muleVersion>${ch2.mule.version}</muleVersion>
-                                <username>${anypoint.username}</username>
-                                <password>${anypoint.password}</password>
+                                <server>anypoint-exchange-v3</server>
                                 <applicationName>${ch2.app.name}</applicationName>
                                 <replicas>${ch2.replicas}</replicas>
                                 <vCores>${ch2.vcores}</vCores>
