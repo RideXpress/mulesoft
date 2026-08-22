@@ -63,9 +63,9 @@ jobs:
 
       - name: Deploy to Runtime Manager
         env:
-          ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
-          ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
-          ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
+          ANYPOINT_USERNAME: ${{ env.ANYPOINT_USERNAME }}
+          ANYPOINT_PASSWORD: ${{ env.ANYPOINT_PASSWORD }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
         run: |
           # Validate required environment variables
           if [[ -z "$ANYPOINT_USERNAME" || -z "$ANYPOINT_PASSWORD" || -z "$ENVIRONMENT" ]]; then
