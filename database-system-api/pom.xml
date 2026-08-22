@@ -132,7 +132,7 @@
                             <cloudhub2Deployment>
                                 <uri>https://anypoint.mulesoft.com</uri>
                                 <provider>MC</provider>
-                                <environment>${ch2.environment}</environment>
+                                <environment>develop</environment>
                                 <target>${ch2.target}</target>
                                 <muleVersion>${ch2.mule.version}</muleVersion>
                                 <server>anypoint-exchange-v3</server>
