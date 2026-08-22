@@ -76,8 +76,7 @@ jobs:
                 ;;
               *)
                 if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT \
-                  -Denv=develop -X
+                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT -Denv=develop 
                   echo "---"
                 fi
                 ;;
