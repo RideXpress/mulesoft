@@ -72,7 +72,7 @@ jobs:
                 ;;
               *)
                 if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -DskipMunitTests 
+                  mvn deploy -f $ARTIFACT -DskipMunitTests 
                   echo "---"
                 fi
                 ;;
