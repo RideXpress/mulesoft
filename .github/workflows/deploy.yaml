@@ -60,7 +60,10 @@ jobs:
             </servers>
           </settings>
           EOSETTINGS
-
+      - name: Publish to Exchange
+        run: |
+          mvn deploy -DskipMunitTests 
+          
       - name: Deploy to Runtime Manager
         env:
           ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
