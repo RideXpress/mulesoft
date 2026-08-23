@@ -135,7 +135,6 @@
                                 <environment>develop</environment>
                                 <businessGroup>RideXPress\Platform</businessGroup>
                                 <target>${ch2.target}</target>
-                                <muleVersion>${ch2.mule.version}</muleVersion>
                                 <server>anypoint-exchange-v3</server>
                                 <applicationName>${ch2.app.name}</applicationName>
                                 <replicas>${ch2.replicas}</replicas>
