@@ -60,9 +60,24 @@ jobs:
             </servers>
           </settings>
           EOSETTINGS
+          
       - name: Publish to Exchange
         run: |
-          mvn deploy -DskipMunitTests 
+          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
+          for ARTIFACT in $ARTIFACTS
+            do
+              case $ARTIFACT in
+                .github | util | docs | pom.xml | README.md)
+                echo "---"
+                ;;
+              *)
+                if [[ -d $ARTIFACT ]]; then
+                  mvn deploy -DskipMunitTests 
+                  echo "---"
+                fi
+                ;;
+              esac
+            done
           
       - name: Deploy to Runtime Manager
         env:
