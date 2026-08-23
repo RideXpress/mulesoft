@@ -105,6 +105,7 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
+	
     <profiles>
         <profile>
             <id>cloudhub2-deploy</id>
