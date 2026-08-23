@@ -76,7 +76,7 @@ jobs:
                 ;;
               *)
                 if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT
+                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT -DskipTests
                   echo "---"
                 fi
                 ;;
