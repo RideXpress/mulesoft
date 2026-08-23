@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.ridexpress</groupId>
+    <groupId>6faf399f-72ee-4560-b5da-0b291ac2a23f</groupId>
     <artifactId>database-system-api</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>mule-application</packaging>
@@ -63,7 +63,7 @@
         <repository>
             <id>anypoint-exchange-v3</id>
             <name>Anypoint Exchange</name>
-            <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/6faf399f-72ee-4560-b5da-0b291ac2a23f/maven</url>
+            <url>https://maven.anypoint.mulesoft.com/api/v3/organizations/${project.groupId}/maven</url>
             <layout>default</layout>
         </repository>
         <repository>
@@ -194,4 +194,12 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <distributionManagement>
+		<repository>
+			<id>anypoint-exchange-v3</id>
+			<name>Exchange Private Repository</name>
+			<url>https://maven.anypoint.mulesoft.com/api/v3/organizations/${project.groupId}/maven</url>
+			<layout>default</layout>
+		</repository>
+	</distributionManagement>
 </project>
