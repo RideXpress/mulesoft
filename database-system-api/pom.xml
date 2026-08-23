@@ -111,7 +111,7 @@
             <properties>
                 <ch2.environment>${env.ENVIRONMENT}</ch2.environment>
                 <ch2.target>Cloudhub-US-East-2</ch2.target>
-                <ch2.mule.version>4.8.0</ch2.mule.version>
+                <ch2.mule.version>4.10.0</ch2.mule.version>
                 <ch2.replicas>1</ch2.replicas>
                 <ch2.vcores>0.1</ch2.vcores>
                 <ch2.app.name>${project.artifactId}</ch2.app.name>
