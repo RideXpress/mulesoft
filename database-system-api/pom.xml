@@ -133,7 +133,7 @@
                                 <uri>https://anypoint.mulesoft.com</uri>
                                 <provider>MC</provider>
                                 <environment>develop</environment>
-                                <<businessGroup>RideXPress\Platform</businessGroup>
+                                <businessGroup>RideXPress\Platform</businessGroup>
                                 <target>${ch2.target}</target>
                                 <muleVersion>${ch2.mule.version}</muleVersion>
                                 <server>anypoint-exchange-v3</server>
