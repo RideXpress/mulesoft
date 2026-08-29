@@ -140,6 +140,7 @@
                                 <replicas>${ch2.replicas}</replicas>
                                 <vCores>${ch2.vcores}</vCores>
                                 <properties>
+									<secrets.path>config.properties</secrets.path>
                                     <ext.postgres.hostname>${app.postgres.hostname}</ext.postgres.hostname>
                                     <ext.postgres.port>${app.postgres.port}</ext.postgres.port>
                                     <ext.postgres.service>${app.postgres.service}</ext.postgres.service>
