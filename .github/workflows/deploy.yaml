@@ -21,6 +21,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '17'
+          cache: 'maven'
 
       - name: Install Maven 3.9.8
         uses: stCarolas/setup-maven@v5
@@ -33,11 +34,6 @@ jobs:
           ANYPOINT_CLIENT_SECRET: ${{ secrets.ANYPOINT_CLIENT_SECRET }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
-          POSTGRES_HOSTNAME: ${{ vars.POSTGRES_HOSTNAME }}
-          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
-          POSTGRES_SERVICE: ${{ vars.POSTGRES_SERVICE }}
-          POSTGRES_USERNAME: ${{ vars.POSTGRES_USERNAME }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           mkdir -p ~/.m2
           cat > ~/.m2/settings.xml << EOSETTINGS
@@ -87,9 +83,12 @@ jobs:
           
       - name: Deploy to Runtime Manager
         env:
-          ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
-          ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
+          POSTGRES_HOSTNAME: ${{ vars.POSTGRES_HOSTNAME }}
+          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+          POSTGRES_SERVICE: ${{ vars.POSTGRES_SERVICE }}
+          POSTGRES_USERNAME: ${{ vars.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
           for ARTIFACT in $ARTIFACTS
