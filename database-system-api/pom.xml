@@ -55,6 +55,12 @@
                         <argLine>-Dsecrets.path=test-secrets.properties</argLine>
                     </argLines>
                     <runtimeVersion>4.10.0</runtimeVersion>
+					 <sharedLibraries>
+                        <sharedLibrary>
+                            <groupId>org.postgresql</groupId>
+            				<artifactId>postgresql</artifactId>
+                        </sharedLibrary>
+                    </sharedLibraries>
                 </configuration>
             </plugin>
         </plugins>
