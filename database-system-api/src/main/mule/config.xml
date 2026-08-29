@@ -15,7 +15,6 @@
 
 	<!-- Configuration Properties -->
 	<configuration-properties doc:name="Configuration properties" file="config.properties" />
-	<configuration-properties doc:name="Secret properties" file="${secrets.path}" />
 
 	<!-- HTTP Listener -->
 	<http:listener-config name="http-listener-config" doc:name="HTTP Listener config">
