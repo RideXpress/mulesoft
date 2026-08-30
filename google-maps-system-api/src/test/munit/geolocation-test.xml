@@ -51,4 +51,25 @@
             <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
         </munit:validation>
     </munit:test>
+
+    <munit:test name="get-place-details-test" description="Test GET /api/places/{placeId} - get place details">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"result": {"place_id": "ChIJN1t_tDeuEmsRUsoyG83frY4", "name": "Test Place", "formatted_address": "1 Test St"}, "status": "OK"}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:attributes value="#[{headers: {}, uriParams: {placeId: 'ChIJN1t_tDeuEmsRUsoyG83frY4'}, requestUri: '/api/places/ChIJN1t_tDeuEmsRUsoyG83frY4', method: 'GET'}]" />
+            </munit:set-event>
+            <flow-ref name="get-place-details-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
 </mule>
