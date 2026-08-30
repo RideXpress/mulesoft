@@ -1,0 +1,20 @@
+[
+  {
+    "id": "e58ed763-928c-4155-bee9-fdbaaadc15f3",
+    "firstName": "Carlos",
+    "lastName": "Gomez",
+    "email": "carlos.gomez@ridexpress.io",
+    "cumulativeBalance": 320.50,
+    "averageRating": 4.8,
+    "totalRides": 152
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "firstName": "Maria",
+    "lastName": "Lopez",
+    "email": "maria.lopez@ridexpress.io",
+    "cumulativeBalance": 125.75,
+    "averageRating": 4.9,
+    "totalRides": 88
+  }
+]

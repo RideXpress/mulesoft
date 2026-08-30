@@ -1,0 +1,11 @@
+{
+  "availabilityStatus": "online",
+  "onboardingStatus": "APPROVED",
+  "backgroundCheckStatus": "APPROVED",
+  "backgroundCheckId": "BGC-20250115",
+  "licensePhotoUrl": "https://storage.ridexpress.io/licenses/DL-987654.jpg",
+  "insuranceDocUrl": "https://storage.ridexpress.io/insurance/carlos-gomez.pdf",
+  "averageRating": 4.8,
+  "totalRides": 153,
+  "cumulativeBalance": 350.00
+}

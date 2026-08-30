@@ -1,0 +1,8 @@
+{
+  "make": "Honda",
+  "model": "Civic",
+  "year": 2023,
+  "licensePlate": "XYZ-5678",
+  "insurancePolicy": "POL-999888777",
+  "isActive": true
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "rideTypeId": "rt001",
+    "name": "Economy",
+    "description": "Affordable rides for everyday travel",
+    "priceMultiplier": 1.0,
+    "minVehicleYear": 2015,
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "rideTypeId": "rt002",
+    "name": "Comfort",
+    "description": "Newer, roomier cars with top-rated drivers",
+    "priceMultiplier": 1.5,
+    "minVehicleYear": 2019,
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "rideTypeId": "rt003",
+    "name": "XL",
+    "description": "Spacious SUVs for groups up to 6",
+    "priceMultiplier": 1.8,
+    "minVehicleYear": 2018,
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "pricingId": "p1a2b3c4-d5e6-7890-abcd-111222333444",
+  "baseFare": 2.50,
+  "perMileRate": 1.75,
+  "perMinuteRate": 0.35,
+  "minimumFare": 5.00,
+  "bookingFee": 1.50,
+  "isActive": true,
+  "effectiveFrom": "2026-01-01",
+  "createdAt": "2025-12-15T08:00:00Z"
+}

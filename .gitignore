@@ -5,3 +5,4 @@
 **/target/
 **/.mule/
 **/.DS_Store
+/database-system-api/src/test/resources/embedded-*

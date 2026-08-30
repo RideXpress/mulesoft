@@ -1,0 +1,10 @@
+{
+  "paymentId": "d4e5f6a7-b8c9-0123-defa-456789012345",
+  "rideId": "c9d8e7f6-a5b4-3210-dcba-987654321fed",
+  "squareOrderId": "order_sq_xyz789",
+  "amount": 24.50,
+  "currency": "USD",
+  "status": "PAID",
+  "createdAt": "2026-08-29T20:05:00Z",
+  "updatedAt": "2026-08-29T20:30:00Z"
+}

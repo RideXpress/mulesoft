@@ -1,0 +1,13 @@
+[
+  {
+    "id": "b7c8d9e0-f1a2-3456-bcde-789012345678",
+    "make": "Toyota",
+    "model": "Camry",
+    "year": 2021,
+    "licensePlate": "ABC-1234",
+    "insurancePolicy": "POL-987654321",
+    "isActive": true,
+    "createdDate": "2025-03-10T09:00:00Z",
+    "lastModifiedDate": "2026-08-01T12:00:00Z"
+  }
+]

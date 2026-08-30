@@ -31,6 +31,270 @@ types:
       longitude: number
       timestamp: datetime
 
+  Driver:
+    type: object
+    description: Driver entity with licensing and status information
+    properties:
+      id?:
+        type: commons.idType
+        description: Unique UUID of the driver (same as user ID)
+      userName?:
+        type: string
+        description: Username of the driver
+      firstName?:
+        type: string
+        description: First name
+      lastName?:
+        type: string
+        description: Last name
+      email?:
+        type: commons.emailType
+        description: Driver email address
+      mobile?:
+        type: string
+        description: Driver mobile phone number
+      licenseNumber?:
+        type: string
+        description: Driver license number
+      licenseExpiry?:
+        type: date-only
+        description: Driver license expiry date
+      licensePhotoUrl?:
+        type: string
+        description: URL of the uploaded license photo
+      insuranceDocUrl?:
+        type: string
+        description: URL of the insurance document
+      backgroundCheckId?:
+        type: string
+        description: Background check identifier
+      backgroundCheckStatus?:
+        type: string
+        description: Status of background check (e.g. PENDING, APPROVED, REJECTED)
+      onboardingStatus?:
+        type: string
+        description: Onboarding status (e.g. PENDING, APPROVED)
+      availabilityStatus?:
+        type: string
+        description: Current availability (e.g. online, offline)
+      averageRating?:
+        type: number
+        description: Driver average rating
+      totalRides?:
+        type: integer
+        description: Total completed rides
+      cumulativeBalance?:
+        type: number
+        description: Accumulated earnings pending payout
+      createdAt?:
+        type: datetime
+      updatedAt?:
+        type: datetime
+
+  DriverRequest:
+    type: object
+    description: Payload to create a driver record for an existing user
+    properties:
+      licenseNumber:
+        type: string
+        description: Driver license number
+      licenseExpiry:
+        type: date-only
+        description: Driver license expiry date
+
+  DriverDocument:
+    type: object
+    description: Driver document upload payload
+    properties:
+      documentType:
+        type: string
+        description: Type of document (e.g. DRIVER_LICENSE, INSURANCE, BACKGROUND_CHECK)
+      fileName:
+        type: string
+        description: Name of the file
+      filePath:
+        type: string
+        description: Storage URL or path of the uploaded file
+
+  BankingInfo:
+    type: object
+    description: Driver banking information
+    properties:
+      bankName:
+        type: string
+        description: Name of the bank
+      accountHolder:
+        type: string
+        description: Account holder name
+      routingNumber:
+        type: string
+        description: Bank routing number
+      accountToken:
+        type: string
+        description: Tokenized bank account reference
+
+  Earning:
+    type: object
+    description: Driver earning record for a single ride
+    properties:
+      earningId?:
+        type: commons.idType
+        description: Unique earning ID
+      userId?:
+        type: commons.idType
+        description: Driver user ID
+      rideId:
+        type: commons.idType
+        description: Associated ride ID
+      grossFare:
+        type: number
+        description: Total fare before deductions
+      platformCommission:
+        type: number
+        description: Platform commission amount
+      tipAmount?:
+        type: number
+        description: Tip amount from passenger
+      cancellationPortion?:
+        type: number
+        description: Earnings from cancellation fee
+      deductions?:
+        type: number
+        description: Additional deductions
+      netEarnings:
+        type: number
+        description: Final net earnings for the driver
+      createdAt?:
+        type: datetime
+
+  Payout:
+    type: object
+    description: Driver payout record
+    properties:
+      squarePayoutId?:
+        type: string
+        description: Square payment platform payout ID
+      amount?:
+        type: number
+        description: Payout amount
+      currency?:
+        type: string
+        description: Currency code (default USD)
+      payoutPeriod?:
+        type: date-only
+        description: The period this payout covers
+      status?:
+        type: string
+        description: Payout status (e.g. PENDING, PAID, FAILED)
+
+  Payment:
+    type: object
+    description: Payment record linked to a ride
+    properties:
+      paymentId?:
+        type: commons.idType
+        description: Unique payment ID
+      rideId?:
+        type: commons.idType
+        description: Associated ride ID
+      squareOrderId?:
+        type: string
+        description: Square order ID
+      amount?:
+        type: number
+        description: Payment amount
+      currency?:
+        type: string
+        description: Currency code (e.g. USD)
+      status?:
+        type: commons.paymentStatus
+        description: Payment status
+      createdAt?:
+        type: datetime
+      updatedAt?:
+        type: datetime
+
+  Pricing:
+    type: object
+    description: Active pricing configuration
+    properties:
+      pricingId?:
+        type: string
+        description: Unique pricing configuration ID
+      baseFare:
+        type: number
+        description: Base fare for all rides
+      perMileRate:
+        type: number
+        description: Per-mile rate
+      perMinuteRate:
+        type: number
+        description: Per-minute rate
+      minimumFare:
+        type: number
+        description: Minimum fare charged per ride
+      bookingFee:
+        type: number
+        description: Fixed booking fee
+      isActive:
+        type: boolean
+        description: Whether this pricing config is active
+      effectiveFrom:
+        type: date-only
+        description: Date from which pricing is effective
+      createdAt?:
+        type: datetime
+
+  SurgeZone:
+    type: object
+    description: Surge pricing zone
+    properties:
+      zoneId:
+        type: string
+        description: Unique zone identifier
+      zoneName:
+        type: string
+        description: Human-readable zone name
+      surgeMultiplier:
+        type: number
+        description: Price multiplier during surge (e.g. 2.5 = 2.5x pricing)
+      demandCount:
+        type: integer
+        description: Current demand (active ride requests) in the zone
+      supplyCount:
+        type: integer
+        description: Current supply (available drivers) in the zone
+      lastCalculatedAt?:
+        type: datetime
+        description: When the surge multiplier was last recalculated
+      createdAt?:
+        type: datetime
+
+  RideType:
+    type: object
+    description: Available ride category/type
+    properties:
+      rideTypeId:
+        type: string
+        description: Unique ride type identifier
+      name:
+        type: string
+        description: Ride type name (e.g. Economy, Comfort, XL)
+      description?:
+        type: string
+        description: Description of the ride type
+      priceMultiplier:
+        type: number
+        description: Price multiplier relative to base pricing
+      minVehicleYear:
+        type: integer
+        description: Minimum vehicle year accepted for this ride type
+      isActive:
+        type: boolean
+        description: Whether this ride type is currently available
+      createdAt?:
+        type: datetime
+
 /ride:
   /{id}:
     get:
@@ -52,14 +316,19 @@ types:
           body:
             application/json:
               type: ride.ride
-  
-  /feedback:
+
+    /feedback:
       post:
+        description: Submit feedback for a ride
         body:
           application/json:
             type:
               properties:
                 rating: commons.ratingType
+                comment?:
+                  type: string
+                userId?:
+                  type: commons.idType
             example: !include examples/rides/rides-feedback-post.json  
         responses:
           201:
@@ -112,7 +381,7 @@ types:
       200:
         body:
           application/json:
-            type: users.user
+            type: users.user[]
             example: !include examples/user/user-get.json
 
   /{id}:
@@ -124,34 +393,47 @@ types:
             application/json:
               type: users.user
               example: !include examples/user/user-id-get.json
+        404:
+          body:
+            application/json:
+              type: commons.apiResponse
 
     patch:
       description: Update user information by ID
       body:
         application/json:
-          type: User
+          type: users.user
       responses:
         200:
           body:
             application/json:
-              type: User
+              type: commons.apiResponse
               example: !include examples/user/user-id-patch-response.json
 
     /location:
       get:
-        description: Returns the driver's realtime location
+        description: Returns the user's realtime location
         responses:
           200:
             body:
               application/json:
                 type: commons.location
-                example: !include examples/rides/rides-loc-passenger-get.json 
+                example: !include examples/rides/rides-loc-passenger-get.json
+          404:
+            body:
+              application/json:
+                type: commons.apiResponse
       post:
         description: Post user "real time" location
         body:
           application/json:
             type: commons.location
             example: !include examples/user/user-geolocation-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
 
     /feedback:
       post:
@@ -166,6 +448,259 @@ types:
                 type: commons.apiResponse
                 example: !include examples/rides/rides-feedback-post-response.json
 
-              
+    /vehicles:
+      get:
+        description: Get all vehicles registered by a user
+        responses:
+          200:
+            body:
+              application/json:
+                type: commons.vehicle[]
+                example: !include examples/user/user-vehicles-get.json
+      post:
+        description: Add a new vehicle for a user
+        body:
+          application/json:
+            type: commons.vehicle
+            example: !include examples/user/user-vehicles-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+          400:
+            body:
+              application/json:
+                type: commons.apiResponse
 
-                
+      /{vehicleId}:
+        put:
+          description: Update a vehicle by ID for a user
+          body:
+            application/json:
+              type: commons.vehicle
+              example: !include examples/user/user-vehicles-put.json
+          responses:
+            200:
+              body:
+                application/json:
+                  type: commons.apiResponse
+
+/drivers:
+  get:
+    description: List all currently available (online) drivers
+    responses:
+      200:
+        body:
+          application/json:
+            type: Driver[]
+            example: !include examples/drivers/drivers-get.json
+
+  /payouts:
+    /pending:
+      get:
+        description: Get drivers with a cumulative balance eligible for payout (balance >= $10)
+        responses:
+          200:
+            body:
+              application/json:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: commons.idType
+                    firstName: string
+                    lastName: string
+                    email: commons.emailType
+                    cumulativeBalance: number
+                    averageRating: number
+                    totalRides: integer
+                example: !include examples/drivers/drivers-payouts-pending-get.json
+
+  /{id}:
+    get:
+      description: Get driver details by ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: Driver
+              example: !include examples/drivers/drivers-id-get.json
+        404:
+          body:
+            application/json:
+              type: commons.apiResponse
+
+    post:
+      description: Create a driver record for an existing user
+      body:
+        application/json:
+          type: DriverRequest
+          example: !include examples/drivers/driver-post.json
+      responses:
+        201:
+          body:
+            application/json:
+              type: commons.apiResponse
+        409:
+          body:
+            application/json:
+              type: commons.apiResponse
+
+    patch:
+      description: Update driver information (availability, onboarding status, ratings, etc.)
+      body:
+        application/json:
+          type: Driver
+          example: !include examples/drivers/driver-patch.json
+      responses:
+        200:
+          body:
+            application/json:
+              type: commons.apiResponse
+
+    /vehicles:
+      post:
+        description: Register a vehicle for a driver
+        body:
+          application/json:
+            type: commons.vehicle
+            example: !include examples/drivers/driver-vehicles-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+    /documents:
+      post:
+        description: Upload a driver document (license photo, insurance, etc.)
+        body:
+          application/json:
+            type: DriverDocument
+            example: !include examples/drivers/driver-documents-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+    /banking:
+      post:
+        description: Store driver banking information for payouts
+        body:
+          application/json:
+            type: BankingInfo
+            example: !include examples/drivers/driver-banking-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+    /earnings:
+      get:
+        description: Get earnings history for a driver
+        responses:
+          200:
+            body:
+              application/json:
+                type: Earning[]
+                example: !include examples/drivers/driver-earnings-get.json
+      post:
+        description: Record earnings for a driver after a completed ride
+        body:
+          application/json:
+            type: Earning
+            example: !include examples/drivers/driver-earnings-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+    /payouts:
+      post:
+        description: Create a payout for a driver
+        body:
+          application/json:
+            type: Payout
+            example: !include examples/drivers/driver-payouts-post.json
+        responses:
+          201:
+            body:
+              application/json:
+                type: commons.apiResponse
+
+      /{payoutId}:
+        patch:
+          description: Update the status of a driver payout
+          body:
+            application/json:
+              type: Payout
+              example: !include examples/drivers/driver-payouts-patch.json
+          responses:
+            200:
+              body:
+                application/json:
+                  type: commons.apiResponse
+
+/payments:
+  /{id}:
+    get:
+      description: Get payment details by ride ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: Payment
+              example: !include examples/payments/payment-get.json
+        404:
+          body:
+            application/json:
+              type: commons.apiResponse
+    patch:
+      description: Update payment status (e.g. after payment gateway confirmation)
+      body:
+        application/json:
+          type: Payment
+          example: !include examples/payments/payment-patch.json
+      responses:
+        200:
+          body:
+            application/json:
+              type: commons.apiResponse
+
+/pricing:
+  get:
+    description: Get the currently active pricing configuration
+    responses:
+      200:
+        body:
+          application/json:
+            type: Pricing
+            example: !include examples/pricing/pricing-get.json
+      404:
+        body:
+          application/json:
+            type: commons.apiResponse
+
+  /surge:
+    get:
+      description: Get all surge pricing zones with current multipliers
+      responses:
+        200:
+          body:
+            application/json:
+              type: SurgeZone[]
+              example: !include examples/pricing/pricing-surge-get.json
+
+/ride-types:
+  get:
+    description: Get all available ride types (Economy, Comfort, XL, etc.)
+    responses:
+      200:
+        body:
+          application/json:
+            type: RideType[]
+            example: !include examples/ride-types/ride-types-get.json

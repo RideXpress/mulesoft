@@ -1,0 +1,8 @@
+{
+  "make": "Toyota",
+  "model": "Camry",
+  "year": 2021,
+  "licensePlate": "ABC-1234",
+  "insurancePolicy": "POL-987654321",
+  "isActive": true
+}

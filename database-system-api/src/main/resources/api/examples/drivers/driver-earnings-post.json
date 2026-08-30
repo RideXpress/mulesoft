@@ -1,0 +1,9 @@
+{
+  "rideId": "c9d8e7f6-a5b4-3210-dcba-987654321fed",
+  "grossFare": 24.50,
+  "platformCommission": 4.90,
+  "tipAmount": 3.00,
+  "cancellationPortion": 0.00,
+  "deductions": 0.00,
+  "netEarnings": 22.60
+}
