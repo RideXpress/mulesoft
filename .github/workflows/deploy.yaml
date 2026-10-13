@@ -62,25 +62,44 @@ jobs:
             </servers>
           </settings>
           EOSETTINGS
-          
-      - name: Publish to Exchange
+
+      - name: Detect changed apps
+        id: apps
         run: |
-          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
-          for ARTIFACT in $ARTIFACTS
-            do
-              case $ARTIFACT in
-                .github | util | docs | pom.xml | README.md)
-                echo "---"
-                ;;
-              *)
-                if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -f $ARTIFACT -DskipMunitTests 
-                  echo "---"
-                fi
-                ;;
-              esac
-            done
-          
+          mapfile -t CANDIDATES < <(git diff --name-only HEAD~1 | awk -F/ 'NF { print $1 }' | sort -u)
+          APPS=()
+          for ARTIFACT in "${CANDIDATES[@]}"; do
+            if [[ -d "$ARTIFACT" && -f "$ARTIFACT/pom.xml" ]]; then
+              APPS+=("$ARTIFACT")
+            fi
+          done
+          {
+            echo "apps<<EOF"
+            if [[ ${#APPS[@]} -gt 0 ]]; then
+              printf '%s\n' "${APPS[@]}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          if [[ ${#APPS[@]} -eq 0 ]]; then
+            echo "No application folders with pom.xml changed."
+          else
+            echo "Apps to process: ${APPS[*]}"
+          fi
+
+      - name: Publish to Exchange
+        env:
+          APPS: ${{ steps.apps.outputs.apps }}
+        run: |
+          if [[ -z "${APPS}" ]]; then
+            echo "No apps to publish."
+            exit 0
+          fi
+          while IFS= read -r ARTIFACT; do
+            [[ -z "${ARTIFACT}" ]] && continue
+            mvn deploy -f "${ARTIFACT}" -DskipMunitTests
+            echo "---"
+          done <<< "${APPS}"
+
       - name: Deploy to Runtime Manager
         env:
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
@@ -89,19 +108,14 @@ jobs:
           POSTGRES_SERVICE: ${{ vars.POSTGRES_SERVICE }}
           POSTGRES_USERNAME: ${{ vars.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          APPS: ${{ steps.apps.outputs.apps }}
         run: |
-          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
-          for ARTIFACT in $ARTIFACTS
-            do
-              case $ARTIFACT in
-                .github | util | docs | pom.xml | README.md)
-                echo "---"
-                ;;
-              *)
-                if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT -DskipTests
-                  echo "---"
-                fi
-                ;;
-              esac
-            done
+          if [[ -z "${APPS}" ]]; then
+            echo "No apps to deploy."
+            exit 0
+          fi
+          while IFS= read -r ARTIFACT; do
+            [[ -z "${ARTIFACT}" ]] && continue
+            mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f "${ARTIFACT}" -DskipTests
+            echo "---"
+          done <<< "${APPS}"
