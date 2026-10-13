@@ -26,10 +26,8 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
       - run: java -version
-      - name: Install Maven 3.9.8
-        uses: stCarolas/setup-maven@v5
-        with:
-          maven-version: '3.9.8'
+      - name: Install Maven
+        uses: ./.github/actions/setup-maven
       - run: mvn -B --no-transfer-progress -version
       - run: mvn -B --no-transfer-progress help:effective-settings
       - run: echo "Setup completed"

@@ -21,10 +21,8 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '17'
-      - name: Install Maven 3.9.8
-        uses: stCarolas/setup-maven@v5
-        with:
-          maven-version: '3.9.8'
+      - name: Install Maven
+        uses: ./.github/actions/setup-maven
       - run: echo "Setup completed"
       - name: Download Design Center Projects
         env:
