@@ -5,6 +5,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Top-level app folder to deploy
+        required: true
+        type: string
 
 jobs:
   deploy:
@@ -66,11 +72,27 @@ jobs:
       - name: Detect changed apps
         id: apps
         env:
+          EVENT_NAME: ${{ github.event_name }}
+          APP_INPUT: ${{ github.event.inputs.app }}
           BEFORE_SHA: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
         run: |
           APPS=()
-          if [[ -z "${BEFORE_SHA}" || "${BEFORE_SHA}" =~ ^0+$ ]]; then
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            if [[ -z "${APP_INPUT}" ]]; then
+              echo "::error::Input 'app' is required. Pass the top-level folder name of the application to deploy."
+              exit 1
+            fi
+            if [[ "${APP_INPUT}" == *"/"* || "${APP_INPUT}" == *".."* || "${APP_INPUT}" == "." || "${APP_INPUT}" == ".." ]]; then
+              echo "::error::'${APP_INPUT}' is not a top-level app folder. Pass the folder name only, without a path."
+              exit 1
+            fi
+            if [[ ! -d "${APP_INPUT}" || ! -f "${APP_INPUT}/pom.xml" ]]; then
+              echo "::error::'${APP_INPUT}' is not a deployable app. The folder must exist at the repository root and contain pom.xml."
+              exit 1
+            fi
+            APPS+=("${APP_INPUT}")
+          elif [[ -z "${BEFORE_SHA}" || "${BEFORE_SHA}" =~ ^0+$ ]]; then
             echo "github.event.before is missing or all zeros; no apps will be deployed."
           elif ! git rev-parse --verify --quiet "${BEFORE_SHA}^{commit}" >/dev/null; then
             echo "Commit ${BEFORE_SHA} is not available; no apps will be deployed."
