@@ -131,7 +131,7 @@ jobs:
           fi
           while IFS= read -r ARTIFACT; do
             [[ -z "${ARTIFACT}" ]] && continue
-            mvn deploy -f "${ARTIFACT}" -DskipMunitTests
+            mvn -B --no-transfer-progress deploy -f "${ARTIFACT}" -DskipMunitTests
             echo "---"
           done <<< "${APPS}"
 
@@ -151,6 +151,6 @@ jobs:
           fi
           while IFS= read -r ARTIFACT; do
             [[ -z "${ARTIFACT}" ]] && continue
-            mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f "${ARTIFACT}" -DskipTests
+            mvn -B --no-transfer-progress deploy -Pcloudhub2-deploy -DmuleDeploy -f "${ARTIFACT}" -DskipTests
             echo "---"
           done <<< "${APPS}"
