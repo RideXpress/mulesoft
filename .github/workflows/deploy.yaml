@@ -5,6 +5,16 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Top-level app folder to deploy
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -14,7 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Required so HEAD~1 exists for the git diff
+          fetch-depth: 0
 
       - name: Install Java 17
         uses: actions/setup-java@v4
@@ -60,25 +70,69 @@ jobs:
             </servers>
           </settings>
           EOSETTINGS
-          
-      - name: Publish to Exchange
+
+      - name: Detect changed apps
+        id: apps
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          APP_INPUT: ${{ github.event.inputs.app }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
-          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
-          for ARTIFACT in $ARTIFACTS
-            do
-              case $ARTIFACT in
-                .github | util | docs | pom.xml | README.md)
-                echo "---"
-                ;;
-              *)
-                if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -f $ARTIFACT -DskipMunitTests 
-                  echo "---"
-                fi
-                ;;
-              esac
+          APPS=()
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            if [[ -z "${APP_INPUT}" ]]; then
+              echo "::error::Input 'app' is required. Pass the top-level folder name of the application to deploy."
+              exit 1
+            fi
+            if [[ "${APP_INPUT}" == *"/"* || "${APP_INPUT}" == *".."* || "${APP_INPUT}" == "." || "${APP_INPUT}" == ".." ]]; then
+              echo "::error::'${APP_INPUT}' is not a top-level app folder. Pass the folder name only, without a path."
+              exit 1
+            fi
+            if [[ ! -d "${APP_INPUT}" || ! -f "${APP_INPUT}/pom.xml" ]]; then
+              echo "::error::'${APP_INPUT}' is not a deployable app. The folder must exist at the repository root and contain pom.xml."
+              exit 1
+            fi
+            APPS+=("${APP_INPUT}")
+          elif [[ -z "${BEFORE_SHA}" || "${BEFORE_SHA}" =~ ^0+$ ]]; then
+            echo "github.event.before is missing or all zeros; no apps will be deployed."
+          elif ! git rev-parse --verify --quiet "${BEFORE_SHA}^{commit}" >/dev/null; then
+            echo "Commit ${BEFORE_SHA} is not available; no apps will be deployed."
+          else
+            mapfile -t CANDIDATES < <(git diff --name-only "${BEFORE_SHA}..${HEAD_SHA}" | awk -F/ 'NF { print $1 }' | sort -u)
+            for ARTIFACT in "${CANDIDATES[@]}"; do
+              if [[ -d "$ARTIFACT" && -f "$ARTIFACT/pom.xml" ]]; then
+                APPS+=("$ARTIFACT")
+              fi
             done
-          
+          fi
+          {
+            echo "apps<<EOF"
+            if [[ ${#APPS[@]} -gt 0 ]]; then
+              printf '%s\n' "${APPS[@]}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          if [[ ${#APPS[@]} -eq 0 ]]; then
+            echo "No application folders with pom.xml changed."
+          else
+            echo "Apps to process: ${APPS[*]}"
+          fi
+
+      - name: Publish to Exchange
+        env:
+          APPS: ${{ steps.apps.outputs.apps }}
+        run: |
+          if [[ -z "${APPS}" ]]; then
+            echo "No apps to publish."
+            exit 0
+          fi
+          while IFS= read -r ARTIFACT; do
+            [[ -z "${ARTIFACT}" ]] && continue
+            mvn -B --no-transfer-progress deploy -f "${ARTIFACT}" -DskipMunitTests
+            echo "---"
+          done <<< "${APPS}"
+
       - name: Deploy to Runtime Manager
         env:
           ENVIRONMENT: ${{ vars.ANYPOINT_ENV }}
@@ -87,19 +141,14 @@ jobs:
           POSTGRES_SERVICE: ${{ vars.POSTGRES_SERVICE }}
           POSTGRES_USERNAME: ${{ vars.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          APPS: ${{ steps.apps.outputs.apps }}
         run: |
-          ARTIFACTS=$(git diff --name-only HEAD~1 | awk -F/ '{print $1}' | sort -u)
-          for ARTIFACT in $ARTIFACTS
-            do
-              case $ARTIFACT in
-                .github | util | docs | pom.xml | README.md)
-                echo "---"
-                ;;
-              *)
-                if [[ -d $ARTIFACT ]]; then
-                  mvn deploy -Pcloudhub2-deploy -DmuleDeploy -f $ARTIFACT -DskipTests
-                  echo "---"
-                fi
-                ;;
-              esac
-            done
+          if [[ -z "${APPS}" ]]; then
+            echo "No apps to deploy."
+            exit 0
+          fi
+          while IFS= read -r ARTIFACT; do
+            [[ -z "${ARTIFACT}" ]] && continue
+            mvn -B --no-transfer-progress deploy -Pcloudhub2-deploy -DmuleDeploy -f "${ARTIFACT}" -DskipTests
+            echo "---"
+          done <<< "${APPS}"
