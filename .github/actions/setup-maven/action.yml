@@ -1,0 +1,9 @@
+name: Setup Maven
+description: Install the Maven version compatible with mule-maven-plugin 4.7.0
+runs:
+  using: composite
+  steps:
+    - name: Install Maven 3.9.8
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: "3.9.8"
