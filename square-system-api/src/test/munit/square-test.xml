@@ -72,4 +72,25 @@
             <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
         </munit:validation>
     </munit:test>
+
+    <munit:test name="get-payments-test" description="Test GET /api/payments/{paymentId} - get payment details">
+        <munit:behavior>
+            <munit-tools:mock-when processor="http:request">
+                <munit-tools:then-return>
+                    <munit-tools:payload value='#[%dw 2.0 output application/json --- {"payment": {"id": "pay-abc", "status": "COMPLETED", "amount_money": {"amount": 2500, "currency": "USD"}}}]' mediaType="application/json" />
+                    <munit-tools:attributes value="#[{statusCode: 200}]" />
+                </munit-tools:then-return>
+            </munit-tools:mock-when>
+        </munit:behavior>
+        <munit:execution>
+            <munit:set-event>
+                <munit:attributes value="#[{headers: {}, uriParams: {paymentId: 'pay-abc'}, requestUri: '/api/payments/pay-abc', method: 'GET'}]" />
+            </munit:set-event>
+            <flow-ref name="get-payments-flow" />
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
 </mule>
